@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -52,15 +53,14 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
+				furia: {
+					black: '#0A0A0A',
+					purple: {
+						DEFAULT: '#9b87f5',
+						dark: '#1A1F2C', 
+						light: '#bdb5f7'
+					},
+					orange: '#F97316'
 				}
 			},
 			borderRadius: {
@@ -84,11 +84,51 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'pulse-glow': {
+					'0%, 100%': { 
+						boxShadow: '0 0 8px 2px rgba(155, 135, 245, 0.3)',
+						transform: 'scale(1)' 
+					},
+					'50%': { 
+						boxShadow: '0 0 16px 4px rgba(155, 135, 245, 0.5)',
+						transform: 'scale(1.03)' 
+					}
+				},
+				'slide-in': {
+					'0%': { 
+						transform: 'translateY(20px)',
+						opacity: '0' 
+					},
+					'100%': { 
+						transform: 'translateY(0)',
+						opacity: '1' 
+					}
+				},
+				'fade-in': {
+					'0%': { opacity: '0' },
+					'100%': { opacity: '1' }
+				},
+				'bounce-subtle': {
+					'0%, 100%': { 
+						transform: 'translateY(0)' 
+					},
+					'50%': { 
+						transform: 'translateY(-5px)' 
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-glow': 'pulse-glow 2s infinite',
+				'slide-in': 'slide-in 0.5s ease-out',
+				'fade-in': 'fade-in 0.5s ease-out',
+				'bounce-subtle': 'bounce-subtle 2s infinite'
+			},
+			fontFamily: {
+				'orbitron': ['Orbitron', 'sans-serif'],
+				'exo': ['Exo 2', 'sans-serif']
 			}
 		}
 	},
