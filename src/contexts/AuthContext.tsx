@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 interface User {
   name: string;
   cpf: string;
+  password: string; // Adicionado campo de senha
   favoriteMode: 'Jogos' | 'Futebol';
   points: number;
   level: string;
@@ -13,8 +14,8 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
-  login: (cpf: string) => boolean;
-  register: (name: string, cpf: string, favoriteMode: 'Jogos' | 'Futebol') => boolean;
+  login: (cpf: string, password: string) => boolean; // Atualizado para incluir senha
+  register: (name: string, cpf: string, password: string, favoriteMode: 'Jogos' | 'Futebol') => boolean; // Atualizado para incluir senha
   logout: () => void;
   updatePoints: (points: number) => void;
   setInSweepstakes: (status: boolean) => void;
@@ -45,13 +46,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
   
-  const login = (cpf: string): boolean => {
+  const login = (cpf: string, password: string): boolean => {
     // In a real app, this would validate against a backend
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
       
-      if (parsedUser.cpf === cpf) {
+      if (parsedUser.cpf === cpf && parsedUser.password === password) { // Verificar também a senha
         parsedUser.level = getLevelFromPoints(parsedUser.points);
         setUser(parsedUser);
         return true;
@@ -60,11 +61,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return false;
   };
   
-  const register = (name: string, cpf: string, favoriteMode: 'Jogos' | 'Futebol'): boolean => {
+  const register = (name: string, cpf: string, password: string, favoriteMode: 'Jogos' | 'Futebol'): boolean => {
     // In a real app, this would register with a backend
     const newUser = {
       name,
       cpf,
+      password, // Armazenar a senha
       favoriteMode,
       points: 0,
       level: 'FURIOSO Iniciante',

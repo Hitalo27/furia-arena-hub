@@ -1,245 +1,252 @@
-
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import PlayerCard from '../components/PlayerCard';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
-interface Card {
-  id: string;
-  name: string;
-  nickname: string;
-  game: string;
-  image: string;
-  bio: string;
-  rarity: 'common' | 'rare' | 'legendary';
-  pointsToUnlock: number;
-}
-
-const sampleCards: Card[] = [
-  {
-    id: '1',
-    name: 'Andrei Piovezan',
-    nickname: 'arT',
-    game: 'CS:GO',
-    image: 'https://images.unsplash.com/photo-1560253023-3ec5d502959f?q=80&w=2224&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    bio: 'Andrei "arT" Piovezan é um jogador profissional de CS:GO brasileiro e capitão do time da FURIA. Conhecido pelo seu estilo agressivo e liderança determinada, arT tem sido fundamental no sucesso da equipe.',
-    rarity: 'legendary',
-    pointsToUnlock: 0
-  },
-  {
-    id: '2',
-    name: 'Kaike Cerato',
-    nickname: 'KSCERATO',
-    game: 'CS:GO',
-    image: 'https://images.unsplash.com/photo-1534423861386-85a16f5d13fd?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    bio: 'Kaike "KSCERATO" Cerato é um jogador profissional brasileiro de CS:GO que compete pela FURIA. Reconhecido por sua incrível precisão e consistência, é considerado um dos melhores jogadores do Brasil.',
-    rarity: 'legendary',
-    pointsToUnlock: 100
-  },
-  {
-    id: '3',
-    name: 'Vinicius Figueiredo',
-    nickname: 'VINI',
-    game: 'CS:GO',
-    image: 'https://images.unsplash.com/photo-1530819568329-97653eafbbfa?q=80&w=1793&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    bio: 'Vinicius "VINI" Figueiredo é um jogador profissional brasileiro de CS:GO da FURIA. Conhecido por seu papel de suporte e trabalho em equipe, VINI é uma parte essencial do sucesso do time.',
-    rarity: 'rare',
-    pointsToUnlock: 50
-  },
-  {
-    id: '4',
-    name: 'Rafael Costa',
-    nickname: 'saffee',
-    game: 'CS:GO',
-    image: 'https://images.unsplash.com/photo-1640079421264-61f3ba0abde8?q=80&w=1780&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    bio: 'Rafael "saffee" Costa é um jogador profissional brasileiro de CS:GO que atua como AWPer pela FURIA. Com sua mira precisa e reflexos rápidos, ele é conhecido por mudar o rumo de partidas importantes.',
-    rarity: 'rare',
-    pointsToUnlock: 200
-  },
-  {
-    id: '5',
-    name: 'Gabriel Toledo',
-    nickname: 'FalleN',
-    game: 'CS:GO',
-    image: 'https://images.unsplash.com/photo-1542779283-429940ce8336?q=80&w=1770&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    bio: 'Gabriel "FalleN" Toledo é um jogador e líder lendário do cenário brasileiro de CS:GO. Com anos de experiência e títulos, FalleN é reconhecido mundialmente como o "Godfather" do CS brasileiro.',
-    rarity: 'legendary',
-    pointsToUnlock: 300
-  },
-  {
-    id: '6',
-    name: 'André Abreu',
-    nickname: 'honda',
-    game: 'Valorant',
-    image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    bio: 'André "honda" Abreu é um jogador profissional de Valorant que representa a FURIA. Com sua excelente pontaria e conhecimento do jogo, honda tem demonstrado grande potencial na cena competitiva.',
-    rarity: 'common',
-    pointsToUnlock: 75
-  }
-];
-
-const Cards = () => {
-  const [filter, setFilter] = useState<string>('all');
-  const [cards, setCards] = useState<Card[]>([]);
-  const { user, isLoggedIn } = useAuth();
+const Login = () => {
+  const [loginCpf, setLoginCpf] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [registerName, setRegisterName] = useState('');
+  const [registerCpf, setRegisterCpf] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [favoriteMode, setFavoriteMode] = useState<'Jogos' | 'Futebol'>('Jogos');
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  
+  const { login, register } = useAuth();
   const navigate = useNavigate();
   
-  useEffect(() => {
-    if (!isLoggedIn) {
-      navigate('/login');
-    } else {
-      // In a real app, fetch user's cards from an API
-      setCards(sampleCards);
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (loginCpf.trim() === '') {
+      toast.error('Por favor, informe seu CPF');
+      return;
     }
-  }, [isLoggedIn, navigate]);
+    
+    if (loginPassword.trim() === '') {
+      toast.error('Por favor, informe sua senha');
+      return;
+    }
+    
+    const success = login(loginCpf, loginPassword);
+    
+    if (success) {
+      toast.success('Login realizado com sucesso!');
+      navigate('/dashboard');
+    } else {
+      toast.error('CPF ou senha incorretos. Por favor, verifique ou cadastre-se.');
+    }
+  };
   
-  if (!user) {
-    return null;
-  }
-  
-  const filteredCards = filter === 'all' 
-    ? cards 
-    : cards.filter(card => card.game.toLowerCase() === filter.toLowerCase());
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (registerName.trim() === '') {
+      toast.error('Por favor, informe seu nome');
+      return;
+    }
+    
+    if (registerCpf.trim() === '') {
+      toast.error('Por favor, informe seu CPF');
+      return;
+    }
+    
+    if (registerPassword.trim() === '') {
+      toast.error('Por favor, defina uma senha');
+      return;
+    }
+    
+    if (!termsAccepted) {
+      toast.error('Você precisa aceitar os termos de uso');
+      return;
+    }
+    
+    const success = register(registerName, registerCpf, registerPassword, favoriteMode);
+    
+    if (success) {
+      toast.success('Cadastro realizado com sucesso!');
+      navigate('/dashboard');
+    } else {
+      toast.error('Erro ao cadastrar. Tente novamente.');
+    }
+  };
 
   return (
-    <div className="min-h-screen pt-24 pb-16 bg-gradient-to-b from-furia-black to-furia-purple-dark/70">
-      <div className="container mx-auto px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-8 text-center">
-            <h1 className="text-2xl md:text-3xl font-orbitron font-bold text-white mb-2">
-              Seus Cards <span className="text-gradient">Digitais</span>
-            </h1>
-            <p className="text-white/70">
-              Colete cards de jogadores da FURIA para desbloquear conteúdo exclusivo!
-            </p>
-          </div>
-          
-          {/* Filters */}
-          <div className="mb-8">
-            <div className="flex flex-wrap justify-center gap-2 mb-4">
-              <button
-                onClick={() => setFilter('all')}
-                className={`px-4 py-2 rounded-full text-sm transition-colors
-                          ${filter === 'all' 
-                            ? 'bg-furia-purple text-white' 
-                            : 'bg-furia-black/40 text-white/70 hover:bg-furia-purple/20'}`}
-              >
-                Todos
-              </button>
-              <button
-                onClick={() => setFilter('CS:GO')}
-                className={`px-4 py-2 rounded-full text-sm transition-colors
-                          ${filter === 'CS:GO' 
-                            ? 'bg-furia-purple text-white' 
-                            : 'bg-furia-black/40 text-white/70 hover:bg-furia-purple/20'}`}
-              >
-                CS:GO
-              </button>
-              <button
-                onClick={() => setFilter('Valorant')}
-                className={`px-4 py-2 rounded-full text-sm transition-colors
-                          ${filter === 'Valorant' 
-                            ? 'bg-furia-purple text-white' 
-                            : 'bg-furia-black/40 text-white/70 hover:bg-furia-purple/20'}`}
-              >
-                Valorant
-              </button>
-              <button
-                onClick={() => setFilter('LoL')}
-                className={`px-4 py-2 rounded-full text-sm transition-colors
-                          ${filter === 'LoL' 
-                            ? 'bg-furia-purple text-white' 
-                            : 'bg-furia-black/40 text-white/70 hover:bg-furia-purple/20'}`}
-              >
-                LoL
-              </button>
-              <button
-                onClick={() => setFilter('Futebol')}
-                className={`px-4 py-2 rounded-full text-sm transition-colors
-                          ${filter === 'Futebol' 
-                            ? 'bg-furia-purple text-white' 
-                            : 'bg-furia-black/40 text-white/70 hover:bg-furia-purple/20'}`}
-              >
-                Futebol
-              </button>
-            </div>
-            
-            <div className="flex items-center justify-between bg-furia-black/50 backdrop-blur-sm p-4 rounded-lg">
-              <div>
-                <p className="text-white">
-                  <span className="font-medium">{filteredCards.length}</span> cards encontrados
-                </p>
-              </div>
-              <div className="text-white/70">
-                <p className="text-sm">
-                  Seus pontos: <span className="text-furia-purple font-medium">{user.points}</span>
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          {/* Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredCards.map(card => (
-              <div key={card.id} className="animate-fade-in">
-                <PlayerCard
-                  id={card.id}
-                  name={card.name}
-                  nickname={card.nickname}
-                  game={card.game}
-                  image={card.image}
-                  bio={card.bio}
-                  rarity={card.rarity}
-                  isLocked={user.points < card.pointsToUnlock}
-                />
-                
-                {user.points < card.pointsToUnlock && (
-                  <div className="mt-2 text-center text-sm text-white/70">
-                    <span className="text-furia-orange">{card.pointsToUnlock - user.points}</span> pontos para desbloquear
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          
-          {filteredCards.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-white/70">Nenhum card encontrado para esta modalidade.</p>
-            </div>
-          )}
-          
-          {/* Card Collection Info */}
-          <div className="mt-12 bg-furia-black/60 backdrop-blur-md rounded-xl p-6 border border-furia-purple/20">
-            <h2 className="text-xl font-orbitron font-bold text-white mb-4">Sobre sua Coleção</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-furia-purple/10 p-4 rounded-lg border border-furia-purple/20">
-                <h3 className="text-sm text-white/70 mb-1">Cards Desbloqueados</h3>
-                <p className="text-2xl font-medium text-white">
-                  {cards.filter(card => user.points >= card.pointsToUnlock).length}/{cards.length}
-                </p>
-              </div>
-              <div className="bg-furia-purple/10 p-4 rounded-lg border border-furia-purple/20">
-                <h3 className="text-sm text-white/70 mb-1">Cards Lendários</h3>
-                <p className="text-2xl font-medium text-white">
-                  {cards.filter(card => card.rarity === 'legendary' && user.points >= card.pointsToUnlock).length}/{cards.filter(card => card.rarity === 'legendary').length}
-                </p>
-              </div>
-              <div className="bg-furia-purple/10 p-4 rounded-lg border border-furia-purple/20">
-                <h3 className="text-sm text-white/70 mb-1">Próximo Desbloqueio</h3>
-                <p className="text-2xl font-medium text-white">
-                  {Math.min(...cards.filter(card => user.points < card.pointsToUnlock).map(card => card.pointsToUnlock - user.points) || 0)} pontos
-                </p>
-              </div>
-            </div>
-            
-            <p className="text-center text-white/70">
-              Novos cards são adicionados regularmente. Ganhe mais pontos para completar sua coleção!
-            </p>
-          </div>
+    <div className="min-h-screen pt-20 pb-16 flex items-center justify-center bg-gradient-to-b from-furia-black to-furia-purple-dark/70">
+      <div className="w-full max-w-md p-6 bg-furia-black/60 backdrop-blur-md rounded-xl shadow-xl border border-furia-purple/20">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-orbitron font-bold text-gradient">FURIA Fans</h1>
+          <p className="text-white/70 mt-2">Entre para começar a sua jornada</p>
         </div>
+        
+        <Tabs defaultValue="login" className="w-full">
+          <TabsList className="grid grid-cols-2 mb-6">
+            <TabsTrigger id="login-tab" value="login">Login</TabsTrigger>
+            <TabsTrigger id="register-tab" value="register">Cadastro</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="login">
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <Label htmlFor="cpf" className="text-white mb-1">
+                  CPF
+                </Label>
+                <Input
+                  type="text"
+                  id="cpf"
+                  value={loginCpf}
+                  onChange={(e) => setLoginCpf(e.target.value)}
+                  className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
+                  placeholder="Digite seu CPF"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="password" className="text-white mb-1">
+                  Senha
+                </Label>
+                <Input
+                  type="password"
+                  id="password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
+                  placeholder="Digite sua senha"
+                />
+              </div>
+              
+              <Button
+                type="submit"
+                className="w-full btn-primary"
+              >
+                Entrar
+              </Button>
+              
+              <p className="text-sm text-center text-white/70 mt-4">
+                Não tem uma conta?{' '}
+                <button
+                  type="button" 
+                  onClick={() => document.getElementById('register-tab')?.click()}
+                  className="text-furia-purple hover:underline focus:outline-none"
+                >
+                  Cadastre-se
+                </button>
+              </p>
+            </form>
+          </TabsContent>
+          
+          <TabsContent value="register">
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div>
+                <Label htmlFor="name" className="text-white mb-1">
+                  Nome
+                </Label>
+                <Input
+                  type="text"
+                  id="name"
+                  value={registerName}
+                  onChange={(e) => setRegisterName(e.target.value)}
+                  className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
+                  placeholder="Digite seu nome"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="register-cpf" className="text-white mb-1">
+                  CPF
+                </Label>
+                <Input
+                  type="text"
+                  id="register-cpf"
+                  value={registerCpf}
+                  onChange={(e) => setRegisterCpf(e.target.value)}
+                  className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
+                  placeholder="Digite seu CPF"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="register-password" className="text-white mb-1">
+                  Senha
+                </Label>
+                <Input
+                  type="password"
+                  id="register-password"
+                  value={registerPassword}
+                  onChange={(e) => setRegisterPassword(e.target.value)}
+                  className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
+                  placeholder="Defina uma senha"
+                />
+              </div>
+              
+              <div>
+                <Label className="text-white mb-2">
+                  Modalidade Favorita
+                </Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFavoriteMode('Jogos')}
+                    className={`py-2 rounded-md border text-center transition-colors
+                              ${favoriteMode === 'Jogos' 
+                                ? 'bg-furia-purple/20 border-furia-purple text-white' 
+                                : 'border-furia-purple/30 text-white/70 hover:bg-furia-purple/10'}`}
+                  >
+                    Jogos
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFavoriteMode('Futebol')}
+                    className={`py-2 rounded-md border text-center transition-colors
+                              ${favoriteMode === 'Futebol' 
+                                ? 'bg-furia-purple/20 border-furia-purple text-white' 
+                                : 'border-furia-purple/30 text-white/70 hover:bg-furia-purple/10'}`}
+                  >
+                    Futebol
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-furia-purple focus:ring-furia-purple"
+                />
+                <label htmlFor="terms" className="ml-2 block text-sm text-white/70">
+                  Aceito os <Link to="/terms" className="text-furia-purple hover:underline">termos de uso</Link> e a <Link to="/privacy" className="text-furia-purple hover:underline">política de privacidade</Link>
+                </label>
+              </div>
+              
+              <Button
+                type="submit"
+                className="w-full btn-primary"
+                disabled={!termsAccepted}
+              >
+                Cadastrar
+              </Button>
+              
+              <p className="text-sm text-center text-white/70 mt-4">
+                Já tem uma conta?{' '}
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('login-tab')?.click()}
+                  className="text-furia-purple hover:underline focus:outline-none"
+                >
+                  Faça login
+                </button>
+              </p>
+            </form>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
 };
 
-export default Cards;
+export default Login;

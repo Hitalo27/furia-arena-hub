@@ -1,14 +1,18 @@
-
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 const Login = () => {
   const [loginCpf, setLoginCpf] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [registerName, setRegisterName] = useState('');
   const [registerCpf, setRegisterCpf] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
   const [favoriteMode, setFavoriteMode] = useState<'Jogos' | 'Futebol'>('Jogos');
   const [termsAccepted, setTermsAccepted] = useState(false);
   
@@ -23,13 +27,18 @@ const Login = () => {
       return;
     }
     
-    const success = login(loginCpf);
+    if (loginPassword.trim() === '') {
+      toast.error('Por favor, informe sua senha');
+      return;
+    }
+    
+    const success = login(loginCpf, loginPassword);
     
     if (success) {
       toast.success('Login realizado com sucesso!');
       navigate('/dashboard');
     } else {
-      toast.error('CPF não encontrado. Por favor, verifique ou cadastre-se.');
+      toast.error('CPF ou senha incorretos. Por favor, verifique ou cadastre-se.');
     }
   };
   
@@ -46,12 +55,17 @@ const Login = () => {
       return;
     }
     
+    if (registerPassword.trim() === '') {
+      toast.error('Por favor, defina uma senha');
+      return;
+    }
+    
     if (!termsAccepted) {
       toast.error('Você precisa aceitar os termos de uso');
       return;
     }
     
-    const success = register(registerName, registerCpf, favoriteMode);
+    const success = register(registerName, registerCpf, registerPassword, favoriteMode);
     
     if (success) {
       toast.success('Cadastro realizado com sucesso!');
@@ -71,38 +85,52 @@ const Login = () => {
         
         <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid grid-cols-2 mb-6">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Cadastro</TabsTrigger>
+            <TabsTrigger id="login-tab" value="login">Login</TabsTrigger>
+            <TabsTrigger id="register-tab" value="register">Cadastro</TabsTrigger>
           </TabsList>
           
           <TabsContent value="login">
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label htmlFor="cpf" className="block text-sm font-medium text-white mb-1">
+                <Label htmlFor="cpf" className="text-white mb-1">
                   CPF
-                </label>
-                <input
+                </Label>
+                <Input
                   type="text"
                   id="cpf"
                   value={loginCpf}
                   onChange={(e) => setLoginCpf(e.target.value)}
-                  className="w-full px-4 py-2 bg-furia-black border border-furia-purple/30 rounded-md focus:outline-none focus:ring-2 focus:ring-furia-purple text-white"
+                  className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
                   placeholder="Digite seu CPF"
                 />
               </div>
               
-              <button
+              <div>
+                <Label htmlFor="password" className="text-white mb-1">
+                  Senha
+                </Label>
+                <Input
+                  type="password"
+                  id="password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
+                  placeholder="Digite sua senha"
+                />
+              </div>
+              
+              <Button
                 type="submit"
                 className="w-full btn-primary"
               >
                 Entrar
-              </button>
+              </Button>
               
               <p className="text-sm text-center text-white/70 mt-4">
                 Não tem uma conta?{' '}
                 <button
                   type="button" 
-                  onClick={() => document.querySelector('[data-value="register"]')?.click()}
+                  onClick={() => document.getElementById('register-tab')?.click()}
                   className="text-furia-purple hover:underline focus:outline-none"
                 >
                   Cadastre-se
@@ -114,37 +142,51 @@ const Login = () => {
           <TabsContent value="register">
             <form onSubmit={handleRegister} className="space-y-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-white mb-1">
+                <Label htmlFor="name" className="text-white mb-1">
                   Nome
-                </label>
-                <input
+                </Label>
+                <Input
                   type="text"
                   id="name"
                   value={registerName}
                   onChange={(e) => setRegisterName(e.target.value)}
-                  className="w-full px-4 py-2 bg-furia-black border border-furia-purple/30 rounded-md focus:outline-none focus:ring-2 focus:ring-furia-purple text-white"
+                  className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
                   placeholder="Digite seu nome"
                 />
               </div>
               
               <div>
-                <label htmlFor="register-cpf" className="block text-sm font-medium text-white mb-1">
+                <Label htmlFor="register-cpf" className="text-white mb-1">
                   CPF
-                </label>
-                <input
+                </Label>
+                <Input
                   type="text"
                   id="register-cpf"
                   value={registerCpf}
                   onChange={(e) => setRegisterCpf(e.target.value)}
-                  className="w-full px-4 py-2 bg-furia-black border border-furia-purple/30 rounded-md focus:outline-none focus:ring-2 focus:ring-furia-purple text-white"
+                  className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
                   placeholder="Digite seu CPF"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <Label htmlFor="register-password" className="text-white mb-1">
+                  Senha
+                </Label>
+                <Input
+                  type="password"
+                  id="register-password"
+                  value={registerPassword}
+                  onChange={(e) => setRegisterPassword(e.target.value)}
+                  className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
+                  placeholder="Defina uma senha"
+                />
+              </div>
+              
+              <div>
+                <Label className="text-white mb-2">
                   Modalidade Favorita
-                </label>
+                </Label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
@@ -182,19 +224,19 @@ const Login = () => {
                 </label>
               </div>
               
-              <button
+              <Button
                 type="submit"
                 className="w-full btn-primary"
                 disabled={!termsAccepted}
               >
                 Cadastrar
-              </button>
+              </Button>
               
               <p className="text-sm text-center text-white/70 mt-4">
                 Já tem uma conta?{' '}
                 <button
                   type="button"
-                  onClick={() => document.querySelector('[data-value="login"]')?.click()}
+                  onClick={() => document.getElementById('login-tab')?.click()}
                   className="text-furia-purple hover:underline focus:outline-none"
                 >
                   Faça login
