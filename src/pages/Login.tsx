@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,63 +16,86 @@ const Login = () => {
   const [registerPassword, setRegisterPassword] = useState('');
   const [favoriteMode, setFavoriteMode] = useState<'Jogos' | 'Futebol'>('Jogos');
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   const { login, register } = useAuth();
   const navigate = useNavigate();
   
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
     if (loginCpf.trim() === '') {
       toast.error('Por favor, informe seu CPF');
+      setIsLoading(false);
       return;
     }
     
     if (loginPassword.trim() === '') {
       toast.error('Por favor, informe sua senha');
+      setIsLoading(false);
       return;
     }
     
-    const success = login(loginCpf, loginPassword);
-    
-    if (success) {
-      toast.success('Login realizado com sucesso!');
-      navigate('/dashboard');
-    } else {
-      toast.error('CPF ou senha incorretos. Por favor, verifique ou cadastre-se.');
+    try {
+      const success = await login(loginCpf, loginPassword);
+      
+      if (success) {
+        toast.success('Login realizado com sucesso!');
+        navigate('/dashboard');
+      } else {
+        toast.error('CPF ou senha incorretos. Por favor, verifique ou cadastre-se.');
+      }
+    } catch (error) {
+      console.error('Erro ao fazer login:', error);
+      toast.error('Ocorreu um erro ao fazer login. Tente novamente.');
+    } finally {
+      setIsLoading(false);
     }
   };
   
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
     if (registerName.trim() === '') {
       toast.error('Por favor, informe seu nome');
+      setIsLoading(false);
       return;
     }
     
     if (registerCpf.trim() === '') {
       toast.error('Por favor, informe seu CPF');
+      setIsLoading(false);
       return;
     }
     
     if (registerPassword.trim() === '') {
       toast.error('Por favor, defina uma senha');
+      setIsLoading(false);
       return;
     }
     
     if (!termsAccepted) {
       toast.error('Você precisa aceitar os termos de uso');
+      setIsLoading(false);
       return;
     }
     
-    const success = register(registerName, registerCpf, registerPassword, favoriteMode);
-    
-    if (success) {
-      toast.success('Cadastro realizado com sucesso!');
-      navigate('/dashboard');
-    } else {
-      toast.error('Erro ao cadastrar. Tente novamente.');
+    try {
+      const success = await register(registerName, registerCpf, registerPassword, favoriteMode);
+      
+      if (success) {
+        toast.success('Cadastro realizado com sucesso!');
+        navigate('/dashboard');
+      } else {
+        toast.error('Erro ao cadastrar. Tente novamente.');
+      }
+    } catch (error) {
+      console.error('Erro ao registrar:', error);
+      toast.error('Ocorreu um erro ao cadastrar. Tente novamente.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -102,6 +126,7 @@ const Login = () => {
                   onChange={(e) => setLoginCpf(e.target.value)}
                   className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
                   placeholder="Digite seu CPF"
+                  disabled={isLoading}
                 />
               </div>
               
@@ -116,14 +141,16 @@ const Login = () => {
                   onChange={(e) => setLoginPassword(e.target.value)}
                   className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
                   placeholder="Digite sua senha"
+                  disabled={isLoading}
                 />
               </div>
               
               <Button
                 type="submit"
                 className="w-full btn-primary"
+                disabled={isLoading}
               >
-                Entrar
+                {isLoading ? 'Entrando...' : 'Entrar'}
               </Button>
               
               <p className="text-sm text-center text-white/70 mt-4">
@@ -132,6 +159,7 @@ const Login = () => {
                   type="button" 
                   onClick={() => document.getElementById('register-tab')?.click()}
                   className="text-furia-purple hover:underline focus:outline-none"
+                  disabled={isLoading}
                 >
                   Cadastre-se
                 </button>
@@ -152,6 +180,7 @@ const Login = () => {
                   onChange={(e) => setRegisterName(e.target.value)}
                   className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
                   placeholder="Digite seu nome"
+                  disabled={isLoading}
                 />
               </div>
               
@@ -166,6 +195,7 @@ const Login = () => {
                   onChange={(e) => setRegisterCpf(e.target.value)}
                   className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
                   placeholder="Digite seu CPF"
+                  disabled={isLoading}
                 />
               </div>
               
@@ -180,6 +210,7 @@ const Login = () => {
                   onChange={(e) => setRegisterPassword(e.target.value)}
                   className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
                   placeholder="Defina uma senha"
+                  disabled={isLoading}
                 />
               </div>
               
@@ -195,6 +226,7 @@ const Login = () => {
                               ${favoriteMode === 'Jogos' 
                                 ? 'bg-furia-purple/20 border-furia-purple text-white' 
                                 : 'border-furia-purple/30 text-white/70 hover:bg-furia-purple/10'}`}
+                    disabled={isLoading}
                   >
                     Jogos
                   </button>
@@ -205,6 +237,7 @@ const Login = () => {
                               ${favoriteMode === 'Futebol' 
                                 ? 'bg-furia-purple/20 border-furia-purple text-white' 
                                 : 'border-furia-purple/30 text-white/70 hover:bg-furia-purple/10'}`}
+                    disabled={isLoading}
                   >
                     Futebol
                   </button>
@@ -218,6 +251,7 @@ const Login = () => {
                   checked={termsAccepted}
                   onChange={(e) => setTermsAccepted(e.target.checked)}
                   className="h-4 w-4 rounded border-gray-300 text-furia-purple focus:ring-furia-purple"
+                  disabled={isLoading}
                 />
                 <label htmlFor="terms" className="ml-2 block text-sm text-white/70">
                   Aceito os <Link to="/terms" className="text-furia-purple hover:underline">termos de uso</Link> e a <Link to="/privacy" className="text-furia-purple hover:underline">política de privacidade</Link>
@@ -227,9 +261,9 @@ const Login = () => {
               <Button
                 type="submit"
                 className="w-full btn-primary"
-                disabled={!termsAccepted}
+                disabled={isLoading || !termsAccepted}
               >
-                Cadastrar
+                {isLoading ? 'Cadastrando...' : 'Cadastrar'}
               </Button>
               
               <p className="text-sm text-center text-white/70 mt-4">
@@ -238,6 +272,7 @@ const Login = () => {
                   type="button"
                   onClick={() => document.getElementById('login-tab')?.click()}
                   className="text-furia-purple hover:underline focus:outline-none"
+                  disabled={isLoading}
                 >
                   Faça login
                 </button>

@@ -13,11 +13,14 @@ export const useSupabaseAuth = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
-        // Buscar dados do usuário na tabela users
+        // Extract CPF from the email (removing the @furianfans.com part)
+        const cpf = session.user.email?.split('@')[0] || '';
+        
+        // Buscar dados do usuário na tabela users usando o CPF
         const { data, error } = await supabase
           .from('users')
           .select('*')
-          .eq('cpf', session.user.email)
+          .eq('cpf', cpf)
           .single();
         
         if (data) {
@@ -43,11 +46,14 @@ export const useSupabaseAuth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
-          // Buscar dados do usuário na tabela users
+          // Extract CPF from the email (removing the @furianfans.com part)
+          const cpf = session.user.email?.split('@')[0] || '';
+          
+          // Buscar dados do usuário na tabela users usando o CPF
           const { data, error } = await supabase
             .from('users')
             .select('*')
-            .eq('cpf', session.user.email)
+            .eq('cpf', cpf)
             .single();
           
           if (data) {

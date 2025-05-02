@@ -6,9 +6,12 @@ import { toast } from 'sonner';
 
 export const login = async (cpf: string, password: string): Promise<User | null> => {
   try {
-    // Usar o cpf como email para autenticação no Supabase
+    // Format the CPF as a valid email to use with Supabase Auth
+    const email = `${cpf}@furianfans.com`;
+    
+    // Use the formatted email for authentication in Supabase
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: cpf, // Usando CPF como email para autenticação
+      email,
       password
     });
     
@@ -50,6 +53,9 @@ export const login = async (cpf: string, password: string): Promise<User | null>
 
 export const register = async (name: string, cpf: string, password: string, favoriteMode: 'Jogos' | 'Futebol'): Promise<User | null> => {
   try {
+    // Format the CPF as a valid email to use with Supabase Auth
+    const email = `${cpf}@furianfans.com`;
+    
     // Verificar se já existe um usuário com este CPF
     const { data: existingUser } = await supabase
       .from('users')
@@ -62,9 +68,9 @@ export const register = async (name: string, cpf: string, password: string, favo
       return null;
     }
     
-    // Criar usuário no auth do Supabase
+    // Criar usuário no auth do Supabase usando o CPF formatado como email
     const { data, error } = await supabase.auth.signUp({
-      email: cpf, // Usando CPF como email para autenticação
+      email,
       password,
       options: {
         data: {
