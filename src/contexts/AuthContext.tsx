@@ -180,19 +180,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return false;
       }
       
-      // Criar registro na tabela users
+      // Criar registro na tabela users - FIX: Changed from array to single object and ISO string date
       const { error: insertError } = await supabase
         .from('users')
-        .insert([
-          {
-            nome: name,
-            cpf: cpf,
-            senha: password, // Nota: normalmente não armazenaríamos a senha em texto claro, mas estamos mantendo compatibilidade com o sistema existente
-            modalidade: favoriteMode,
-            pontos: 0,
-            criado_em: new Date()
-          }
-        ]);
+        .insert({
+          nome: name,
+          cpf: cpf,
+          senha: password,
+          modalidade: favoriteMode,
+          pontos: 0,
+          criado_em: new Date().toISOString()
+        });
       
       if (insertError) {
         console.error('Erro ao inserir dados na tabela users:', insertError);
