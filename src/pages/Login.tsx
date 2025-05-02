@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 const Login = () => {
   const [loginCpf, setLoginCpf] = useState('');
@@ -16,86 +17,107 @@ const Login = () => {
   const [registerPassword, setRegisterPassword] = useState('');
   const [favoriteMode, setFavoriteMode] = useState<'Jogos' | 'Futebol'>('Jogos');
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoginLoading, setIsLoginLoading] = useState(false);
+  const [isRegisterLoading, setIsRegisterLoading] = useState(false);
   
   const { login, register } = useAuth();
   const navigate = useNavigate();
   
+  const validateCpf = (cpf: string): boolean => {
+    // Basic validation - only numbers and proper length
+    return /^\d{11}$/.test(cpf.replace(/[^\d]/g, ''));
+  };
+  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsLoginLoading(true);
     
     if (loginCpf.trim() === '') {
       toast.error('Por favor, informe seu CPF');
-      setIsLoading(false);
+      setIsLoginLoading(false);
+      return;
+    }
+    
+    if (!validateCpf(loginCpf)) {
+      toast.error('CPF inválido. Deve conter 11 dígitos numéricos.');
+      setIsLoginLoading(false);
       return;
     }
     
     if (loginPassword.trim() === '') {
       toast.error('Por favor, informe sua senha');
-      setIsLoading(false);
+      setIsLoginLoading(false);
       return;
     }
     
     try {
-      const success = await login(loginCpf, loginPassword);
+      const formattedCpf = loginCpf.replace(/[^\d]/g, ''); // Remove non-numeric characters
+      const success = await login(formattedCpf, loginPassword);
       
       if (success) {
         toast.success('Login realizado com sucesso!');
         navigate('/dashboard');
-      } else {
-        toast.error('CPF ou senha incorretos. Por favor, verifique ou cadastre-se.');
       }
     } catch (error) {
       console.error('Erro ao fazer login:', error);
       toast.error('Ocorreu um erro ao fazer login. Tente novamente.');
     } finally {
-      setIsLoading(false);
+      setIsLoginLoading(false);
     }
   };
   
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsRegisterLoading(true);
     
     if (registerName.trim() === '') {
       toast.error('Por favor, informe seu nome');
-      setIsLoading(false);
+      setIsRegisterLoading(false);
       return;
     }
     
     if (registerCpf.trim() === '') {
       toast.error('Por favor, informe seu CPF');
-      setIsLoading(false);
+      setIsRegisterLoading(false);
+      return;
+    }
+    
+    if (!validateCpf(registerCpf)) {
+      toast.error('CPF inválido. Deve conter 11 dígitos numéricos.');
+      setIsRegisterLoading(false);
       return;
     }
     
     if (registerPassword.trim() === '') {
       toast.error('Por favor, defina uma senha');
-      setIsLoading(false);
+      setIsRegisterLoading(false);
+      return;
+    }
+    
+    if (registerPassword.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres');
+      setIsRegisterLoading(false);
       return;
     }
     
     if (!termsAccepted) {
       toast.error('Você precisa aceitar os termos de uso');
-      setIsLoading(false);
+      setIsRegisterLoading(false);
       return;
     }
     
     try {
-      const success = await register(registerName, registerCpf, registerPassword, favoriteMode);
+      const formattedCpf = registerCpf.replace(/[^\d]/g, ''); // Remove non-numeric characters
+      const success = await register(registerName, formattedCpf, registerPassword, favoriteMode);
       
       if (success) {
-        toast.success('Cadastro realizado com sucesso!');
         navigate('/dashboard');
-      } else {
-        toast.error('Erro ao cadastrar. Tente novamente.');
       }
     } catch (error) {
       console.error('Erro ao registrar:', error);
       toast.error('Ocorreu um erro ao cadastrar. Tente novamente.');
     } finally {
-      setIsLoading(false);
+      setIsRegisterLoading(false);
     }
   };
 
@@ -125,8 +147,9 @@ const Login = () => {
                   value={loginCpf}
                   onChange={(e) => setLoginCpf(e.target.value)}
                   className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
-                  placeholder="Digite seu CPF"
-                  disabled={isLoading}
+                  placeholder="Digite seu CPF (apenas números)"
+                  disabled={isLoginLoading}
+                  maxLength={11}
                 />
               </div>
               
@@ -141,16 +164,23 @@ const Login = () => {
                   onChange={(e) => setLoginPassword(e.target.value)}
                   className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
                   placeholder="Digite sua senha"
-                  disabled={isLoading}
+                  disabled={isLoginLoading}
                 />
               </div>
               
               <Button
                 type="submit"
                 className="w-full btn-primary"
-                disabled={isLoading}
+                disabled={isLoginLoading}
               >
-                {isLoading ? 'Entrando...' : 'Entrar'}
+                {isLoginLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Entrando...
+                  </>
+                ) : (
+                  'Entrar'
+                )}
               </Button>
               
               <p className="text-sm text-center text-white/70 mt-4">
@@ -159,7 +189,7 @@ const Login = () => {
                   type="button" 
                   onClick={() => document.getElementById('register-tab')?.click()}
                   className="text-furia-purple hover:underline focus:outline-none"
-                  disabled={isLoading}
+                  disabled={isLoginLoading}
                 >
                   Cadastre-se
                 </button>
@@ -180,7 +210,7 @@ const Login = () => {
                   onChange={(e) => setRegisterName(e.target.value)}
                   className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
                   placeholder="Digite seu nome"
-                  disabled={isLoading}
+                  disabled={isRegisterLoading}
                 />
               </div>
               
@@ -194,8 +224,9 @@ const Login = () => {
                   value={registerCpf}
                   onChange={(e) => setRegisterCpf(e.target.value)}
                   className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
-                  placeholder="Digite seu CPF"
-                  disabled={isLoading}
+                  placeholder="Digite seu CPF (apenas números)"
+                  disabled={isRegisterLoading}
+                  maxLength={11}
                 />
               </div>
               
@@ -209,8 +240,9 @@ const Login = () => {
                   value={registerPassword}
                   onChange={(e) => setRegisterPassword(e.target.value)}
                   className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
-                  placeholder="Defina uma senha"
-                  disabled={isLoading}
+                  placeholder="Defina uma senha (min. 6 caracteres)"
+                  disabled={isRegisterLoading}
+                  minLength={6}
                 />
               </div>
               
@@ -226,7 +258,7 @@ const Login = () => {
                               ${favoriteMode === 'Jogos' 
                                 ? 'bg-furia-purple/20 border-furia-purple text-white' 
                                 : 'border-furia-purple/30 text-white/70 hover:bg-furia-purple/10'}`}
-                    disabled={isLoading}
+                    disabled={isRegisterLoading}
                   >
                     Jogos
                   </button>
@@ -237,7 +269,7 @@ const Login = () => {
                               ${favoriteMode === 'Futebol' 
                                 ? 'bg-furia-purple/20 border-furia-purple text-white' 
                                 : 'border-furia-purple/30 text-white/70 hover:bg-furia-purple/10'}`}
-                    disabled={isLoading}
+                    disabled={isRegisterLoading}
                   >
                     Futebol
                   </button>
@@ -251,7 +283,7 @@ const Login = () => {
                   checked={termsAccepted}
                   onChange={(e) => setTermsAccepted(e.target.checked)}
                   className="h-4 w-4 rounded border-gray-300 text-furia-purple focus:ring-furia-purple"
-                  disabled={isLoading}
+                  disabled={isRegisterLoading}
                 />
                 <label htmlFor="terms" className="ml-2 block text-sm text-white/70">
                   Aceito os <Link to="/terms" className="text-furia-purple hover:underline">termos de uso</Link> e a <Link to="/privacy" className="text-furia-purple hover:underline">política de privacidade</Link>
@@ -261,9 +293,16 @@ const Login = () => {
               <Button
                 type="submit"
                 className="w-full btn-primary"
-                disabled={isLoading || !termsAccepted}
+                disabled={isRegisterLoading || !termsAccepted}
               >
-                {isLoading ? 'Cadastrando...' : 'Cadastrar'}
+                {isRegisterLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Cadastrando...
+                  </>
+                ) : (
+                  'Cadastrar'
+                )}
               </Button>
               
               <p className="text-sm text-center text-white/70 mt-4">
@@ -272,7 +311,7 @@ const Login = () => {
                   type="button"
                   onClick={() => document.getElementById('login-tab')?.click()}
                   className="text-furia-purple hover:underline focus:outline-none"
-                  disabled={isLoading}
+                  disabled={isRegisterLoading}
                 >
                   Faça login
                 </button>

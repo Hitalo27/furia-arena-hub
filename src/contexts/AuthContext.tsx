@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { User, AuthContextType } from '@/types/auth';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import * as authService from '@/services/authService';
@@ -13,15 +13,17 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Get initial user state from Supabase session
-  const { user: initialUser } = useSupabaseAuth();
+  const { user: initialUser, loading: authLoading } = useSupabaseAuth();
   const [user, setUser] = useState<User | null>(initialUser);
+  const [isAuthReady, setIsAuthReady] = useState(!authLoading);
   
   // Update user state when initialUser changes
-  React.useEffect(() => {
-    if (initialUser) {
+  useEffect(() => {
+    if (!authLoading) {
       setUser(initialUser);
+      setIsAuthReady(true);
     }
-  }, [initialUser]);
+  }, [initialUser, authLoading]);
   
   const login = async (cpf: string, password: string): Promise<boolean> => {
     const loggedInUser = await authService.login(cpf, password);
@@ -67,7 +69,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   return (
     <AuthContext.Provider value={{ 
       user, 
-      isLoggedIn: !!user, 
+      isLoggedIn: !!user,
+      loading: !isAuthReady,
       login, 
       register, 
       logout,

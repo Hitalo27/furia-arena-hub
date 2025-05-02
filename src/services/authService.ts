@@ -6,34 +6,34 @@ import { toast } from 'sonner';
 
 export const login = async (cpf: string, password: string): Promise<User | null> => {
   try {
-    // Format the CPF as a valid email to use with Supabase Auth
-    const email = `${cpf}@furianfans.com`;
+    // First check if the user exists in our users table
+    const { data: userData, error: userCheckError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('cpf', cpf)
+      .single();
     
-    // Use the formatted email for authentication in Supabase
+    if (userCheckError || !userData) {
+      toast.error('CPF não encontrado. Por favor, verifique ou cadastre-se.');
+      return null;
+    }
+    
+    // Use a consistent email format for authentication
+    const email = `user_${cpf}@furianfans.com`;
+    
+    // Authenticate with Supabase Auth
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
     
     if (error) {
-      toast.error('CPF ou senha incorretos. Por favor, verifique ou cadastre-se.');
+      toast.error('Senha incorreta. Por favor, tente novamente.');
       console.error('Erro ao fazer login:', error);
       return null;
     }
     
-    // Buscar dados do usuário na tabela users
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('cpf', cpf)
-      .single();
-    
-    if (userError || !userData) {
-      toast.error('Erro ao buscar dados do usuário.');
-      console.error('Erro ao buscar dados do usuário:', userError);
-      return null;
-    }
-    
+    // Return user data from our users table
     const userObject: User = {
       name: userData.nome,
       cpf: userData.cpf,
@@ -53,10 +53,7 @@ export const login = async (cpf: string, password: string): Promise<User | null>
 
 export const register = async (name: string, cpf: string, password: string, favoriteMode: 'Jogos' | 'Futebol'): Promise<User | null> => {
   try {
-    // Format the CPF as a valid email to use with Supabase Auth
-    const email = `${cpf}@furianfans.com`;
-    
-    // Verificar se já existe um usuário com este CPF
+    // Check if user already exists
     const { data: existingUser } = await supabase
       .from('users')
       .select('*')
@@ -68,7 +65,10 @@ export const register = async (name: string, cpf: string, password: string, favo
       return null;
     }
     
-    // Criar usuário no auth do Supabase usando o CPF formatado como email
+    // Use a consistent email format for authentication
+    const email = `user_${cpf}@furianfans.com`;
+    
+    // Create user in Supabase Auth
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -87,7 +87,7 @@ export const register = async (name: string, cpf: string, password: string, favo
       return null;
     }
     
-    // Criar registro na tabela users
+    // Create user record in our users table
     const { error: insertError } = await supabase
       .from('users')
       .insert({
@@ -101,11 +101,15 @@ export const register = async (name: string, cpf: string, password: string, favo
     
     if (insertError) {
       console.error('Erro ao inserir dados na tabela users:', insertError);
-      // Tentar remover o usuário criado na auth se falhou ao inserir na tabela
-      await supabase.auth.admin.deleteUser(data.user?.id || '');
+      // Try to clean up the auth user if we couldn't create the profile
+      if (data.user?.id) {
+        await supabase.auth.admin.deleteUser(data.user.id);
+      }
       toast.error('Erro ao cadastrar. Tente novamente.');
       return null;
     }
+    
+    toast.success('Cadastro realizado com sucesso!');
     
     const newUser: User = {
       name,

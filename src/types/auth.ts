@@ -11,6 +11,7 @@ export interface User {
 export interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
+  loading: boolean;
   login: (cpf: string, password: string) => Promise<boolean>;
   register: (name: string, cpf: string, password: string, favoriteMode: 'Jogos' | 'Futebol') => Promise<boolean>;
   logout: () => Promise<void>;
