@@ -68,13 +68,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // };
   
   const register = async (name: string, email: string, password: string, favoriteMode: 'Jogos' | 'Futebol'): Promise<boolean> => {
-    const newUser = await authService.register(name, email, password, favoriteMode);
-    if (newUser) {
-      setUser(newUser);
-      return true;
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+  
+      if (error) {
+        console.error('Erro ao tentar registrar:', error.message);
+        return false;  // Retorna falso se houve erro
+      }
+  
+      if (data.user) {
+        console.log('Registro bem-sucedido:', data.user);
+        return true;  // Retorna verdadeiro se o cadastro foi feito
+      } else {
+        console.log('Falha no registro, usuário não criado.');
+        return false;
+      }
+    } catch (err) {
+      console.error('Erro inesperado ao tentar registrar:', err);
+      return false;
     }
-    return false;
   };
+    // const newUser = await authService.register(name, email, password, favoriteMode);
+    // if (newUser) {
+    //   setUser(newUser);
+    //   return true;
+    // }
+    // return false;
+  // };
   
   const logout = async (): Promise<void> => {
     await authService.logout();
