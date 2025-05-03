@@ -28,36 +28,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const { user, error: authError } = await supabase.auth.signInWithPassword({
+      const { data: { session }, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
   
       if (authError) {
         console.error('Erro ao tentar realizar o login:', authError.message);
-        return false;  // Retorna falso se houver erro no login
+        toast.error('Email ou senha incorretos. Por favor, tente novamente.');
+        return false;
       }
   
-      if (user) {
-        console.log('Login bem-sucedido:', user);
-        return true;  // Retorna verdadeiro se o login for bem-sucedido
-      } else {
-        console.log('Falha no login, usuário não encontrado.');
-        return false;  // Retorna falso caso o usuário não seja encontrado
+      if (session) {
+        console.log('Login bem-sucedido:', session.user);
+        const loggedInUser = await authService.login(email, password);
+        if (loggedInUser) {
+          setUser(loggedInUser);
+          return true;
+        }
       }
+      
+      return false;
     } catch (err) {
       console.error('Erro inesperado ao tentar logar:', err);
-      return false;  // Em caso de erro inesperado, retorna falso
+      toast.error('Ocorreu um erro ao fazer login. Tente novamente.');
+      return false;
     }
   };
-  
-  //   const loggedInUser = await authService.login(email, password);
-  //   if (loggedInUser) {
-  //     setUser(loggedInUser);
-  //     return true;
-  //   }
-  //   return false;
-  // };
   
   const register = async (name: string, email: string, password: string, favoriteMode: 'Jogos' | 'Futebol'): Promise<boolean> => {
     const newUser = await authService.register(name, email, password, favoriteMode);

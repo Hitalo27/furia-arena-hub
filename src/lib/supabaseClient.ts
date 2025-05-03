@@ -1,5 +1,5 @@
+
 import { createClient } from '@supabase/supabase-js';
-import { login, register } from '@/services/authService'; // Certifique-se de que o caminho para o authService está correto
 
 // Configurações do Supabase
 const supabaseUrl = 'https://uoelpjllkzkfayqptcxz.supabase.co';  // URL do seu projeto Supabase
@@ -7,6 +7,7 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 // Criação do cliente do Supabase
 export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabaseClient = supabase; // Add this line to export the client with the name 'supabaseClient'
 
 // Função de teste de conexão
 export const testConnection = async () => {
@@ -29,7 +30,7 @@ export const testLogin = async () => {
 
   // Realizando o login
   try {
-    const { user, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -39,8 +40,8 @@ export const testLogin = async () => {
       return;
     }
 
-    if (user) {
-      console.log('Login bem-sucedido:', user);
+    if (data.user) {
+      console.log('Login bem-sucedido:', data.user);
     } else {
       console.log('Falha no login, usuário não encontrado.');
     }
@@ -54,22 +55,3 @@ testConnection();
 
 // Testa o login
 testLogin();
-
-// Função de teste de registro (caso necessário)
-export const testRegister = async () => {
-  const name = 'Novo Usuário';
-  const email = 'novo@usuario.com';
-  const password = 'novaSenha123';
-  const favoriteMode = 'Jogos'; // Ou 'Futebol', dependendo do teste
-  
-  const user = await register(name, email, password, favoriteMode);
-  
-  if (user) {
-    console.log('Cadastro bem-sucedido:', user);
-  } else {
-    console.log('Falha no cadastro.');
-  }
-};
-
-// Executa o registro (caso necessário)
-testRegister();

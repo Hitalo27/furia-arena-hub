@@ -22,14 +22,9 @@ export const login = async (email: string, password: string): Promise<User | nul
       }
 
       if (!userData || userData.length === 0) {
-        toast.error('Email não encontrado32. Por favor, verifique ou cadastre-se.');
+        toast.error('Email não encontrado. Por favor, verifique ou cadastre-se.');
         return null;
       }
-    
-    // if (userCheckError || !userData) {
-    //   toast.error('Email não encontrado. Por favor, verifique ou cadastre-se.');
-    //   return null;
-    // }
     
     // Authenticate with Supabase Auth
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -45,11 +40,11 @@ export const login = async (email: string, password: string): Promise<User | nul
     
     // Return user data from our users table
     const userObject: User = {
-      name: userData.nome,
-      email: userData.email,
-      favoriteMode: userData.modalidade as 'Jogos' | 'Futebol',
-      points: userData.pontos || 0,
-      level: getLevelFromPoints(userData.pontos || 0),
+      name: userData[0].nome,
+      email: userData[0].email,
+      favoriteMode: userData[0].modalidade as 'Jogos' | 'Futebol',
+      points: userData[0].pontos || 0,
+      level: getLevelFromPoints(userData[0].pontos || 0),
       inSweepstakes: false
     };
     
@@ -74,15 +69,26 @@ export const register = async (name: string, email: string, password: string, fa
       return null;
     }
 
-    const { dados, errors } = await supabaseClient.auth.signUp({
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
     });
 
+    if (authError) {
+      console.error('Erro ao criar autenticação:', authError);
+      toast.error('Erro ao cadastrar. Tente novamente.');
+      return null;
+    }
+
+    if (!authData.user) {
+      toast.error('Erro ao criar conta. Tente novamente.');
+      return null;
+    }
+
     const { data, error } = await supabase
       .from('users')
       .insert({
-        id: dados.user.id,
+        id: authData.user.id,
         nome: name,
         email: email,
         senha: password,
