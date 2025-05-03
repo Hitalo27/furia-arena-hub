@@ -57,13 +57,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
   
   const register = async (name: string, email: string, password: string, favoriteMode: 'Jogos' | 'Futebol'): Promise<boolean> => {
-    const newUser = await authService.register(name, email, password, favoriteMode);
-    if (newUser) {
-      setUser(newUser);
-      return true;
+    try {
+      const newUser = await authService.register(name, email, password, favoriteMode);
+      if (newUser) {
+        setUser(newUser);
+        return true;
+      } else {
+        toast.error('Erro ao cadastrar. Verifique suas informações.');
+        return false;
+      }
+    } catch (error) {
+      console.error('Erro ao tentar registrar usuário:', error);
+      toast.error('Erro inesperado ao cadastrar.');
+      return false;
     }
-    return false;
   };
+  
   
   const logout = async (): Promise<void> => {
     await authService.logout();
