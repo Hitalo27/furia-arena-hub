@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { login, register } from '@/services/authService'; // Substitua pelo caminho correto da sua classe AuthService
-
+import { login, register } from '@/services/authService'; // Certifique-se de que o caminho para o authService está correto
 
 // Configurações do Supabase
 const supabaseUrl = 'https://uoelpjllkzkfayqptcxz.supabase.co';  // URL do seu projeto Supabase
@@ -23,25 +22,40 @@ export const testConnection = async () => {
   }
 };
 
-// Executa o teste de conexão
-testConnection();
-
-
+// Função para testar o login
 export const testLogin = async () => {
-  const email = 'usuario@example.com';
-  const password = 'senha123'; // Coloque a senha correta do usuário para o teste
-  
-  const user = await login(email, password);
-  
-  if (user) {
-    console.log('Login bem-sucedido:', user);
-  } else {
-    console.log('Falha no login.');
+  const email = 'usuario@example.com'; // Email do usuário registrado no Supabase
+  const password = 'senha123'; // Senha do usuário
+
+  // Realizando o login
+  try {
+    const { user, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      console.error('Erro no login:', error.message);
+      return;
+    }
+
+    if (user) {
+      console.log('Login bem-sucedido:', user);
+    } else {
+      console.log('Falha no login, usuário não encontrado.');
+    }
+  } catch (err) {
+    console.error('Erro inesperado ao tentar logar:', err);
   }
 };
 
+// Executa a conexão com o Supabase
+testConnection();
+
+// Testa o login
 testLogin();
 
+// Função de teste de registro (caso necessário)
 export const testRegister = async () => {
   const name = 'Novo Usuário';
   const email = 'novo@usuario.com';
@@ -57,4 +71,5 @@ export const testRegister = async () => {
   }
 };
 
+// Executa o registro (caso necessário)
 testRegister();
