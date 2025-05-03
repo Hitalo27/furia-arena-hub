@@ -70,6 +70,7 @@ export const login = async (email: string, password: string): Promise<User | nul
 
 export const register = async (name: string, email: string, password: string, favoriteMode: 'Jogos' | 'Futebol'): Promise<User | null> => {
   try {
+    console.log("buscando usuario");
     const { data: existingUser} = await supabase
       .from('users')
       .select('*')
