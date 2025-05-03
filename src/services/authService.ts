@@ -11,17 +11,28 @@ export const login = async (email: string, password: string): Promise<User | nul
       .from('users')
       .select('*')
       .eq('email', email)
-      .single();
+      .limit(1); 
+      // .single();
+
+      if (userCheckError) {
+        toast.error(`Erro ao buscar o usuário: ${userCheckError.message}`);
+        return null;
+      }
+
+      if (!userData || userData.length === 0) {
+        toast.error('Email não encontrado. Por favor, verifique ou cadastre-se.');
+        return null;
+      }
     
-    if (userCheckError || !userData) {
-      toast.error('Email não encontrado. Por favor, verifique ou cadastre-se.');
-      return null;
-    }
+    // if (userCheckError || !userData) {
+    //   toast.error('Email não encontrado. Por favor, verifique ou cadastre-se.');
+    //   return null;
+    // }
     
     // Authenticate with Supabase Auth
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     });
     
     if (error) {
