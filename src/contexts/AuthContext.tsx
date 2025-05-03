@@ -28,24 +28,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-
       const loggedInUser = await authService.login(email, password);
-
-   if (!loggedInUser) {
-      console.error('Login falhou: usuário inválido ou erro de autenticação.');
-      toast.error('Email ou senha incorretos. Por favor, tente novamente.');
+  
+      if (!loggedInUser) {
+        console.error('Login falhou: usuário inválido ou erro de autenticação.');
+        toast.error('Email ou senha incorretos. Por favor, tente novamente.');
+        return false;
+      }
+  
+      console.log('Login bem-sucedido:', loggedInUser);
+      setUser(loggedInUser);
+      return true;
+    } catch (err) {
+      console.error('Erro inesperado ao tentar logar:', err);
+      toast.error('Ocorreu um erro ao fazer login. Tente novamente.');
       return false;
     }
-
-    console.log('Login bem-sucedido:', loggedInUser);
-    setUser(loggedInUser);
-    return true;
-  } catch (err) {
-    console.error('Erro inesperado ao tentar logar:', err);
-    toast.error('Ocorreu um erro ao fazer login. Tente novamente.');
-    return false;
-  }
-};
+  };
+  
   
   const register = async (name: string, email: string, password: string, favoriteMode: 'Jogos' | 'Futebol'): Promise<boolean> => {
     try {
