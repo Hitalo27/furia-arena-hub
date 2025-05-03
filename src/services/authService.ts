@@ -64,16 +64,16 @@ export const login = async (email: string, password: string): Promise<User | nul
 
 export const register = async (name: string, email: string, password: string, favoriteMode: 'Jogos' | 'Futebol'): Promise<User | null> => {
   try {
-    const { data: existingUser } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .single();
+    // const { data: existingUser } = await supabase
+    //   .from('users')
+    //   .select('*')
+    //   .eq('email', email)
+    //   .single();
     
-    if (existingUser) {
-      toast.error('Este email já está cadastrado.');
-      return null;
-    }
+    // if (existingUser) {
+    //   toast.error('Este email já está cadastrado.');
+    //   return null;
+    // }
 
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
