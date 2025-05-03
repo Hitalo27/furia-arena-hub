@@ -15,22 +15,22 @@ export const login = async (email: string, password: string): Promise<User | nul
   
   try {
     // First check if the user exists in our users table
-    // const { data: userData, error: userCheckError } = await supabase
-    //   .from('users')
-    //   .select('*')
-    //   .eq('email', email)
-    //   .limit(1); 
-    //   // .single();
+    const { data: userData, error: userCheckError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .limit(1); 
+      // .single();
 
-    //   if (userCheckError) {
-    //     toast.error(`Erro ao buscar o usuário: ${userCheckError.message}`);
-    //     return null;
-    //   }
+      if (userCheckError) {
+        toast.error(`Erro ao buscar o usuário: ${userCheckError.message}`);
+        return null;
+      }
 
-    //   if (!userData || userData.length === 0) {
-    //     toast.error('Email não encontrado. Por favor, verifique ou cadastre-se.');
-    //     return null;
-    //   }
+      if (!userData || userData.length === 0) {
+        toast.error('Email não encontrado. Por favor, verifique ou cadastre-se.');
+        return null;
+      }
     
     // Authenticate with Supabase Auth
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -44,26 +44,22 @@ export const login = async (email: string, password: string): Promise<User | nul
       return null;
     }
     
-    
-    console.log(data);
-    
     // Return user data from our users table
-    // const userObject: User = {
-    //   name: userData[0].nome,
-    //   email: userData[0].email,
-    //   favoriteMode: userData[0].modalidade as 'Jogos' | 'Futebol',
-    //   points: userData[0].pontos || 0,
-    //   level: getLevelFromPoints(userData[0].pontos || 0),
-    //   inSweepstakes: false
-    // };
+    const userObject: User = {
+      name: userData[0].nome,
+      email: userData[0].email,
+      favoriteMode: userData[0].modalidade as 'Jogos' | 'Futebol',
+      points: userData[0].pontos || 0,
+      level: getLevelFromPoints(userData[0].pontos || 0),
+      inSweepstakes: false
+    };
     
-    // return userObject;
+    return userObject;
   } catch (error) {
     console.error('Erro inesperado ao fazer login:', error);
     toast.error('Erro ao fazer login. Tente novamente.');
     return null;
   }
-
 };
 
 export const register = async (name: string, email: string, password: string, favoriteMode: 'Jogos' | 'Futebol'): Promise<User | null> => {
