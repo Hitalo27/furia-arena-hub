@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/auth';
 import { getLevelFromPoints } from '@/utils/authUtils';
 import { toast } from 'sonner';
+import { supabaseClient } from '@/lib/supabaseClient';
 
 export const login = async (email: string, password: string): Promise<User | null> => {
   
@@ -15,7 +16,6 @@ export const login = async (email: string, password: string): Promise<User | nul
       .limit(1); 
       // .single();
 
-      
       if (userCheckError) {
         toast.error(`Erro ao buscar o usuário: ${userCheckError.message}`);
         return null;
@@ -63,7 +63,6 @@ export const login = async (email: string, password: string): Promise<User | nul
 
 export const register = async (name: string, email: string, password: string, favoriteMode: 'Jogos' | 'Futebol'): Promise<User | null> => {
   try {
-    // Check if user already exists
     const { data: existingUser } = await supabase
       .from('users')
       .select('*')
@@ -74,11 +73,16 @@ export const register = async (name: string, email: string, password: string, fa
       toast.error('Este email já está cadastrado.');
       return null;
     }
-    
-    // Create user record in our users table
+
+    const { dados, errors } = await supabaseClient.auth.signUp({
+      email,
+      password,
+    });
+
     const { data, error } = await supabase
       .from('users')
       .insert({
+        id: dados.user.id,
         nome: name,
         email: email,
         senha: password,
