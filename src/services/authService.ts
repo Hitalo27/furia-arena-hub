@@ -5,6 +5,7 @@ import { getLevelFromPoints } from '@/utils/authUtils';
 import { toast } from 'sonner';
 
 export const login = async (email: string, password: string): Promise<User | null> => {
+  
   try {
     // First check if the user exists in our users table
     const { data: userData, error: userCheckError } = await supabase
@@ -14,6 +15,7 @@ export const login = async (email: string, password: string): Promise<User | nul
       .limit(1); 
       // .single();
 
+      
       if (userCheckError) {
         toast.error(`Erro ao buscar o usuário: ${userCheckError.message}`);
         return null;

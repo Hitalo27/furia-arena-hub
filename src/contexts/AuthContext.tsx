@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { User, AuthContextType } from '@/types/auth';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import * as authService from '@/services/authService';
+import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,6 +27,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [initialUser, authLoading]);
   
   const login = async (email: string, password: string): Promise<boolean> => {
+    const { data, error } = await supabase.from('users').select('*').limit(1);
+    if (error) {
+      console.error('Erro ao testar a conexão com o Supabase:', error);
+      return false;  
+    }
+    
+    console.log('Conexão bem-sucedida com o Supabase!', data);
+  
     const loggedInUser = await authService.login(email, password);
     if (loggedInUser) {
       setUser(loggedInUser);
