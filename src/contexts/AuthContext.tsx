@@ -28,10 +28,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const { data: { session }, error: authError } = await supabase.auth.signInWithPassword({
+      const { data: { session }, error: authError } = await authService.login(
         email,
         password,
-      });
+      );
   
       if (authError) {
         console.error('Erro ao tentar realizar o login:', authError.message);
