@@ -152,8 +152,8 @@ export type Database = {
       }
       users: {
         Row: {
-          cpf: string
           criado_em: string | null
+          email: string
           id: string
           modalidade: string | null
           nome: string | null
@@ -161,8 +161,8 @@ export type Database = {
           senha: string | null
         }
         Insert: {
-          cpf: string
           criado_em?: string | null
+          email: string
           id?: string
           modalidade?: string | null
           nome?: string | null
@@ -170,8 +170,8 @@ export type Database = {
           senha?: string | null
         }
         Update: {
-          cpf?: string
           criado_em?: string | null
+          email?: string
           id?: string
           modalidade?: string | null
           nome?: string | null
