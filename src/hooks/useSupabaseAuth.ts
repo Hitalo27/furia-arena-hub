@@ -16,26 +16,20 @@ export const useSupabaseAuth = () => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session) {
-          // Get user metadata from session
-          const userMetadata = session.user.user_metadata;
           const email = session.user.email || '';
           
-          // Extract CPF from email (format: user_CPF@furianfans.com)
-          const cpfMatch = email.match(/user_(.+)@furianfans\.com/);
-          const cpf = cpfMatch ? cpfMatch[1] : '';
-          
-          if (cpf) {
-            // Buscar dados do usuário na tabela users usando o CPF
+          if (email) {
+            // Buscar dados do usuário na tabela users usando o email
             const { data, error } = await supabase
               .from('users')
               .select('*')
-              .eq('cpf', cpf)
+              .eq('email', email)
               .single();
             
             if (data) {
               const userData: User = {
                 name: data.nome,
-                cpf: data.cpf,
+                email: data.email,
                 favoriteMode: data.modalidade as 'Jogos' | 'Futebol',
                 points: data.pontos || 0,
                 level: getLevelFromPoints(data.pontos || 0),
@@ -61,23 +55,20 @@ export const useSupabaseAuth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
-          // Extract CPF from email (format: user_CPF@furianfans.com)
           const email = session.user.email || '';
-          const cpfMatch = email.match(/user_(.+)@furianfans\.com/);
-          const cpf = cpfMatch ? cpfMatch[1] : '';
           
-          if (cpf) {
-            // Buscar dados do usuário na tabela users usando o CPF
+          if (email) {
+            // Buscar dados do usuário na tabela users usando o email
             const { data, error } = await supabase
               .from('users')
               .select('*')
-              .eq('cpf', cpf)
+              .eq('email', email)
               .single();
             
             if (data) {
               const userData: User = {
                 name: data.nome,
-                cpf: data.cpf,
+                email: data.email,
                 favoriteMode: data.modalidade as 'Jogos' | 'Futebol',
                 points: data.pontos || 0,
                 level: getLevelFromPoints(data.pontos || 0),

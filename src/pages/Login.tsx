@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,10 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
 const Login = () => {
-  const [loginCpf, setLoginCpf] = useState('');
+  const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [registerName, setRegisterName] = useState('');
-  const [registerCpf, setRegisterCpf] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [favoriteMode, setFavoriteMode] = useState<'Jogos' | 'Futebol'>('Jogos');
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -22,24 +23,23 @@ const Login = () => {
   const { login, register } = useAuth();
   const navigate = useNavigate();
   
-  const validateCpf = (cpf: string): boolean => {
-    // Basic validation - only numbers and proper length
-    const cleanedCpf = cpf.replace(/[^\d]/g, '');
-    return cleanedCpf.length === 11;
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoginLoading(true);
     
-    if (loginCpf.trim() === '') {
-      toast.error('Por favor, informe seu CPF');
+    if (loginEmail.trim() === '') {
+      toast.error('Por favor, informe seu email');
       setIsLoginLoading(false);
       return;
     }
     
-    if (!validateCpf(loginCpf)) {
-      toast.error('CPF inválido. Deve conter 11 dígitos numéricos.');
+    if (!validateEmail(loginEmail)) {
+      toast.error('Email inválido. Por favor, verifique o formato.');
       setIsLoginLoading(false);
       return;
     }
@@ -51,8 +51,7 @@ const Login = () => {
     }
     
     try {
-      const formattedCpf = loginCpf.replace(/[^\d]/g, ''); // Remove non-numeric characters
-      const success = await login(formattedCpf, loginPassword);
+      const success = await login(loginEmail, loginPassword);
       
       if (success) {
         toast.success('Login realizado com sucesso!');
@@ -76,14 +75,14 @@ const Login = () => {
       return;
     }
     
-    if (registerCpf.trim() === '') {
-      toast.error('Por favor, informe seu CPF');
+    if (registerEmail.trim() === '') {
+      toast.error('Por favor, informe seu email');
       setIsRegisterLoading(false);
       return;
     }
     
-    if (!validateCpf(registerCpf)) {
-      toast.error('CPF inválido. Deve conter 11 dígitos numéricos.');
+    if (!validateEmail(registerEmail)) {
+      toast.error('Email inválido. Por favor, verifique o formato.');
       setIsRegisterLoading(false);
       return;
     }
@@ -107,8 +106,7 @@ const Login = () => {
     }
     
     try {
-      const formattedCpf = registerCpf.replace(/[^\d]/g, ''); // Remove non-numeric characters
-      const success = await register(registerName, formattedCpf, registerPassword, favoriteMode);
+      const success = await register(registerName, registerEmail, registerPassword, favoriteMode);
       
       if (success) {
         navigate('/dashboard');
@@ -138,18 +136,17 @@ const Login = () => {
           <TabsContent value="login">
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <Label htmlFor="cpf" className="text-white mb-1">
-                  CPF
+                <Label htmlFor="email" className="text-white mb-1">
+                  Email
                 </Label>
                 <Input
-                  type="text"
-                  id="cpf"
-                  value={loginCpf}
-                  onChange={(e) => setLoginCpf(e.target.value)}
+                  type="email"
+                  id="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
                   className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
-                  placeholder="Digite seu CPF (apenas números)"
+                  placeholder="Digite seu email"
                   disabled={isLoginLoading}
-                  maxLength={11}
                 />
               </div>
               
@@ -215,18 +212,17 @@ const Login = () => {
               </div>
               
               <div>
-                <Label htmlFor="register-cpf" className="text-white mb-1">
-                  CPF
+                <Label htmlFor="register-email" className="text-white mb-1">
+                  Email
                 </Label>
                 <Input
-                  type="text"
-                  id="register-cpf"
-                  value={registerCpf}
-                  onChange={(e) => setRegisterCpf(e.target.value)}
+                  type="email"
+                  id="register-email"
+                  value={registerEmail}
+                  onChange={(e) => setRegisterEmail(e.target.value)}
                   className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
-                  placeholder="Digite seu CPF (apenas números)"
+                  placeholder="Digite seu email"
                   disabled={isRegisterLoading}
-                  maxLength={11}
                 />
               </div>
               

@@ -1,7 +1,7 @@
 
 export interface User {
   name: string;
-  cpf: string;
+  email: string;
   favoriteMode: 'Jogos' | 'Futebol';
   points: number;
   level: string;
@@ -12,8 +12,8 @@ export interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
   loading: boolean;
-  login: (cpf: string, password: string) => Promise<boolean>;
-  register: (name: string, cpf: string, password: string, favoriteMode: 'Jogos' | 'Futebol') => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string, favoriteMode: 'Jogos' | 'Futebol') => Promise<boolean>;
   logout: () => Promise<void>;
   updatePoints: (points: number) => Promise<void>;
   setInSweepstakes: (status: boolean) => Promise<void>;

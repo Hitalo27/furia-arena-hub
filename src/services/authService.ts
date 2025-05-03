@@ -4,22 +4,19 @@ import { User } from '@/types/auth';
 import { getLevelFromPoints } from '@/utils/authUtils';
 import { toast } from 'sonner';
 
-export const login = async (cpf: string, password: string): Promise<User | null> => {
+export const login = async (email: string, password: string): Promise<User | null> => {
   try {
     // First check if the user exists in our users table
     const { data: userData, error: userCheckError } = await supabase
       .from('users')
       .select('*')
-      .eq('cpf', cpf)
+      .eq('email', email)
       .single();
     
     if (userCheckError || !userData) {
-      toast.error('CPF não encontrado. Por favor, verifique ou cadastre-se.');
+      toast.error('Email não encontrado. Por favor, verifique ou cadastre-se.');
       return null;
     }
-    
-    // Use a consistent email format for authentication
-    const email = `user_${cpf}@furianfans.com`;
     
     // Authenticate with Supabase Auth
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -36,7 +33,7 @@ export const login = async (cpf: string, password: string): Promise<User | null>
     // Return user data from our users table
     const userObject: User = {
       name: userData.nome,
-      cpf: userData.cpf,
+      email: userData.email,
       favoriteMode: userData.modalidade as 'Jogos' | 'Futebol',
       points: userData.pontos || 0,
       level: getLevelFromPoints(userData.pontos || 0),
@@ -51,29 +48,26 @@ export const login = async (cpf: string, password: string): Promise<User | null>
   }
 };
 
-export const register = async (name: string, cpf: string, password: string, favoriteMode: 'Jogos' | 'Futebol'): Promise<User | null> => {
+export const register = async (name: string, email: string, password: string, favoriteMode: 'Jogos' | 'Futebol'): Promise<User | null> => {
   try {
     // Check if user already exists
     const { data: existingUser } = await supabase
       .from('users')
       .select('*')
-      .eq('cpf', cpf)
+      .eq('email', email)
       .single();
     
     if (existingUser) {
-      toast.error('Este CPF já está cadastrado.');
+      toast.error('Este email já está cadastrado.');
       return null;
     }
-    
-    // Note: We're NOT using Auth anymore since email signups are disabled
-    // Instead, we're only adding the user to our custom users table
     
     // Create user record in our users table
     const { data, error } = await supabase
       .from('users')
       .insert({
         nome: name,
-        cpf: cpf,
+        email: email,
         senha: password,
         modalidade: favoriteMode,
         pontos: 0,
@@ -92,7 +86,7 @@ export const register = async (name: string, cpf: string, password: string, favo
     
     const newUser: User = {
       name,
-      cpf,
+      email,
       favoriteMode,
       points: 0,
       level: 'FURIOSO Iniciante',
@@ -100,7 +94,7 @@ export const register = async (name: string, cpf: string, password: string, favo
     };
     
     // Auto-login após o cadastro
-    const loginResult = await login(cpf, password);
+    const loginResult = await login(email, password);
     if (!loginResult) {
       toast.error('Cadastro realizado, mas falha ao efetuar login automático. Por favor faça login manualmente.');
     }
@@ -128,7 +122,7 @@ export const updatePoints = async (user: User, points: number): Promise<User | n
     const { error } = await supabase
       .from('users')
       .update({ pontos: newPoints })
-      .eq('cpf', user.cpf);
+      .eq('email', user.email);
     
     if (error) {
       console.error('Erro ao atualizar pontos:', error);

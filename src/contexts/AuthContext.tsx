@@ -25,8 +25,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [initialUser, authLoading]);
   
-  const login = async (cpf: string, password: string): Promise<boolean> => {
-    const loggedInUser = await authService.login(cpf, password);
+  const login = async (email: string, password: string): Promise<boolean> => {
+    const loggedInUser = await authService.login(email, password);
     if (loggedInUser) {
       setUser(loggedInUser);
       return true;
@@ -34,8 +34,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return false;
   };
   
-  const register = async (name: string, cpf: string, password: string, favoriteMode: 'Jogos' | 'Futebol'): Promise<boolean> => {
-    const newUser = await authService.register(name, cpf, password, favoriteMode);
+  const register = async (name: string, email: string, password: string, favoriteMode: 'Jogos' | 'Futebol'): Promise<boolean> => {
+    const newUser = await authService.register(name, email, password, favoriteMode);
     if (newUser) {
       setUser(newUser);
       return true;
