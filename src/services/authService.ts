@@ -1,9 +1,16 @@
 
-import { supabase } from '@/integrations/supabase/client';
+// import { supabase } from '@/integrations/supabase/client';
+import { createClient } from '@supabase/supabase-js';
 import { User } from '@/types/auth';
 import { getLevelFromPoints } from '@/utils/authUtils';
 import { toast } from 'sonner';
 import { supabaseClient } from '@/lib/supabaseClient';
+
+const supabaseUrl = 'https://uoelpjllkzkfayqptcxz.supabase.co';  // URL do seu projeto Supabase
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvZWxwamxsa3prZmF5cXB0Y3h6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNTc4MjUsImV4cCI6MjA2MTczMzgyNX0.pjRFD_pP1_idKdWxaBCdqLr2TY3ZSm4ohSZm3wt8F2c';  // Chave de API do Supabase
+
+// Criação do cliente do Supabase
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
 export const login = async (email: string, password: string): Promise<User | null> => {
   
