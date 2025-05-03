@@ -20,7 +20,7 @@ export const login = async (email: string, password: string): Promise<User | nul
       }
 
       if (!userData || userData.length === 0) {
-        toast.error('Email não encontrado. Por favor, verifique ou cadastre-se.');
+        toast.error('Email não encontrado32. Por favor, verifique ou cadastre-se.');
         return null;
       }
     
