@@ -15,6 +15,7 @@ export const login = async (email: string, password: string): Promise<User | nul
   try {
     // First check if the user exists in our users table
     console.log("passou aq")
+    await supabase.auth.getSession();
     const { data: userData, error: userCheckError } = await supabase
     .from('users')
     .select('*')
@@ -71,6 +72,7 @@ export const login = async (email: string, password: string): Promise<User | nul
 export const register = async (name: string, email: string, password: string, favoriteMode: 'Jogos' | 'Futebol'): Promise<User | null> => {
   try {
     console.log("buscando usuario");
+    await supabase.auth.getSession();
     const { data: existingUser} = await supabase
       .from('users')
       .select('*')
