@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -25,7 +24,8 @@ const Login = () => {
   
   const validateCpf = (cpf: string): boolean => {
     // Basic validation - only numbers and proper length
-    return /^\d{11}$/.test(cpf.replace(/[^\d]/g, ''));
+    const cleanedCpf = cpf.replace(/[^\d]/g, '');
+    return cleanedCpf.length === 11;
   };
   
   const handleLogin = async (e: React.FormEvent) => {
@@ -286,7 +286,7 @@ const Login = () => {
                   disabled={isRegisterLoading}
                 />
                 <label htmlFor="terms" className="ml-2 block text-sm text-white/70">
-                  Aceito os <Link to="/terms" className="text-furia-purple hover:underline">termos de uso</Link> e a <Link to="/privacy" className="text-furia-purple hover:underline">política de privacidade</Link>
+                  Aceito os termos de uso e a política de privacidade
                 </label>
               </div>
               

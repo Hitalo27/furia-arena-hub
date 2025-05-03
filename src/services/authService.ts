@@ -65,30 +65,11 @@ export const register = async (name: string, cpf: string, password: string, favo
       return null;
     }
     
-    // Use a consistent email format for authentication
-    const email = `user_${cpf}@furianfans.com`;
-    
-    // Create user in Supabase Auth
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name,
-          cpf,
-          favoriteMode
-        }
-      }
-    });
-    
-    if (error) {
-      console.error('Erro ao cadastrar usuário:', error);
-      toast.error('Erro ao cadastrar. Tente novamente.');
-      return null;
-    }
+    // Note: We're NOT using Auth anymore since email signups are disabled
+    // Instead, we're only adding the user to our custom users table
     
     // Create user record in our users table
-    const { error: insertError } = await supabase
+    const { data, error } = await supabase
       .from('users')
       .insert({
         nome: name,
@@ -97,14 +78,12 @@ export const register = async (name: string, cpf: string, password: string, favo
         modalidade: favoriteMode,
         pontos: 0,
         criado_em: new Date().toISOString()
-      });
+      })
+      .select()
+      .single();
     
-    if (insertError) {
-      console.error('Erro ao inserir dados na tabela users:', insertError);
-      // Try to clean up the auth user if we couldn't create the profile
-      if (data.user?.id) {
-        await supabase.auth.admin.deleteUser(data.user.id);
-      }
+    if (error) {
+      console.error('Erro ao inserir dados na tabela users:', error);
       toast.error('Erro ao cadastrar. Tente novamente.');
       return null;
     }
@@ -120,8 +99,14 @@ export const register = async (name: string, cpf: string, password: string, favo
       inSweepstakes: false
     };
     
+    // Auto-login após o cadastro
+    const loginResult = await login(cpf, password);
+    if (!loginResult) {
+      toast.error('Cadastro realizado, mas falha ao efetuar login automático. Por favor faça login manualmente.');
+    }
+    
     return newUser;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro inesperado ao cadastrar:', error);
     toast.error('Erro ao cadastrar. Tente novamente.');
     return null;

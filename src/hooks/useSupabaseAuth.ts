@@ -18,28 +18,34 @@ export const useSupabaseAuth = () => {
         if (session) {
           // Get user metadata from session
           const userMetadata = session.user.user_metadata;
-          const cpf = userMetadata?.cpf || '';
+          const email = session.user.email || '';
           
-          // Buscar dados do usuário na tabela users usando o CPF
-          const { data, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('cpf', cpf)
-            .single();
+          // Extract CPF from email (format: user_CPF@furianfans.com)
+          const cpfMatch = email.match(/user_(.+)@furianfans\.com/);
+          const cpf = cpfMatch ? cpfMatch[1] : '';
           
-          if (data) {
-            const userData: User = {
-              name: data.nome,
-              cpf: data.cpf,
-              favoriteMode: data.modalidade as 'Jogos' | 'Futebol',
-              points: data.pontos || 0,
-              level: getLevelFromPoints(data.pontos || 0),
-              inSweepstakes: false
-            };
-            setUser(userData);
-          } else if (error) {
-            console.error('Erro ao buscar dados do usuário:', error);
-            await supabase.auth.signOut();
+          if (cpf) {
+            // Buscar dados do usuário na tabela users usando o CPF
+            const { data, error } = await supabase
+              .from('users')
+              .select('*')
+              .eq('cpf', cpf)
+              .single();
+            
+            if (data) {
+              const userData: User = {
+                name: data.nome,
+                cpf: data.cpf,
+                favoriteMode: data.modalidade as 'Jogos' | 'Futebol',
+                points: data.pontos || 0,
+                level: getLevelFromPoints(data.pontos || 0),
+                inSweepstakes: false
+              };
+              setUser(userData);
+            } else if (error) {
+              console.error('Erro ao buscar dados do usuário:', error);
+              await supabase.auth.signOut();
+            }
           }
         }
       } catch (error) {
@@ -55,27 +61,30 @@ export const useSupabaseAuth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
-          // Get user metadata from session
-          const userMetadata = session.user.user_metadata;
-          const cpf = userMetadata?.cpf || '';
+          // Extract CPF from email (format: user_CPF@furianfans.com)
+          const email = session.user.email || '';
+          const cpfMatch = email.match(/user_(.+)@furianfans\.com/);
+          const cpf = cpfMatch ? cpfMatch[1] : '';
           
-          // Buscar dados do usuário na tabela users usando o CPF
-          const { data, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('cpf', cpf)
-            .single();
-          
-          if (data) {
-            const userData: User = {
-              name: data.nome,
-              cpf: data.cpf,
-              favoriteMode: data.modalidade as 'Jogos' | 'Futebol',
-              points: data.pontos || 0,
-              level: getLevelFromPoints(data.pontos || 0),
-              inSweepstakes: false
-            };
-            setUser(userData);
+          if (cpf) {
+            // Buscar dados do usuário na tabela users usando o CPF
+            const { data, error } = await supabase
+              .from('users')
+              .select('*')
+              .eq('cpf', cpf)
+              .single();
+            
+            if (data) {
+              const userData: User = {
+                name: data.nome,
+                cpf: data.cpf,
+                favoriteMode: data.modalidade as 'Jogos' | 'Futebol',
+                points: data.pontos || 0,
+                level: getLevelFromPoints(data.pontos || 0),
+                inSweepstakes: false
+              };
+              setUser(userData);
+            }
           }
           setLoading(false);
         } else if (event === 'SIGNED_OUT') {
