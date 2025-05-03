@@ -3,7 +3,6 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { User, AuthContextType } from '@/types/auth';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import * as authService from '@/services/authService';
-import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,7 +17,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(initialUser);
   const [isAuthReady, setIsAuthReady] = useState(!authLoading);
   
-  // Update user state when initialUser changes
   useEffect(() => {
     if (!authLoading) {
       setUser(initialUser);
