@@ -4,8 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import QuizQuestion, { QuestionProps } from '../components/QuizQuestion';
 import { toast } from "sonner";
+import { createClient } from '@supabase/supabase-js';
 
-// Sample questions data (in a real app, this would come from an API)
+const supabaseUrl = 'https://uoelpjllkzkfayqptcxz.supabase.co'; 
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvZWxwamxsa3prZmF5cXB0Y3h6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNTc4MjUsImV4cCI6MjA2MTczMzgyNX0.pjRFD_pP1_idKdWxaBCdqLr2TY3ZSm4ohSZm3wt8F2c';  // Chave de API do Supabase
+
+export const supabase = createClient(supabaseUrl, supabaseKey);
+
+
 const sampleQuestions: Omit<QuestionProps, 'onAnswer'>[] = [
   {
     id: '1',
@@ -49,6 +55,7 @@ const Quiz = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [quizCompleted, setQuizCompleted] = useState(false);
+  const [quizFailed, setQuizFailed] = useState(false);
   const { user, isLoggedIn, updatePoints, setInSweepstakes } = useAuth();
   const navigate = useNavigate();
   
@@ -57,46 +64,103 @@ const Quiz = () => {
       navigate('/login');
     }
   }, [isLoggedIn, navigate]);
+
+  const canTakeQuiz = (lastQuizDateFromDB) => {
+    if (lastQuizDateFromDB) {
+      const lastQuizDate = new Date(lastQuizDateFromDB);
+      const today = new Date();
+      
+      const lastQuizDateString = lastQuizDate.toISOString().split('T')[0];
+      const todayString = today.toISOString().split('T')[0];
+
+      
+    if (lastQuizDateString === todayString) {
+      return false;
+    }
+
+    }
+    return true;
+  };
+
+  useEffect(() => {
+    const checkUserQuizStatus = async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('lastQuizDate')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Erro ao buscar usuário:', error);
+        return;
+      }
+  
+      const lastQuizDateFromDB = data?.lastQuizDate;
+
+    if (!canTakeQuiz(lastQuizDateFromDB)) {
+      toast.error("Você já fez o quiz hoje! Tente novamente amanhã.", {
+        position: "top-center", // Alterando para exibir no topo centralizado
+        autoClose: 3000,  // Tempo para desaparecer automaticamente
+        hideProgressBar: false,  // Exibe a barra de progresso
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        style: {
+          fontSize: "18px",  // Aumenta o tamanho da fonte
+          padding: "20px",  // Adiciona mais espaço ao redor da mensagem
+          backgroundColor: "#f97316",  // Cor do fundo
+          color: "white",
+          fontWeight: "bold",  // Torna o texto mais forte
+        },
+      });
+      navigate('/dashboard');  // Redireciona
+    }
+  };  if (user?.id) {
+    checkUserQuizStatus();
+  }
+}, [user, navigate]);
   
   const handleAnswer = (isCorrect: boolean) => {
     if (isCorrect) {
       setCorrectAnswers(prev => prev + 1);
     }
-    
+  
     setTimeout(() => {
       if (currentQuestionIndex < sampleQuestions.length - 1) {
-        setCurrentQuestionIndex(prev => prev + 1);
+        setCurrentQuestionIndex(prev => prev + 1); 
       } else {
-        completeQuiz();
+        setQuizCompleted(true)
       }
-    }, 1500);
+    }, 1000);
   };
   
-  const completeQuiz = () => {
-    setQuizCompleted(true);
+  const completeQuiz = async () => {
     
-    const pointsEarned = correctAnswers * 25;
-    
+    const pointsEarned = correctAnswers * 25; 
+
     if (pointsEarned > 0) {
       updatePoints(pointsEarned);
-      
-      if (correctAnswers >= 3 && user && !user.inSweepstakes) {
+
+      if (correctAnswers>= 3 && user && !user.inSweepstakes) {
         setInSweepstakes(true);
         toast.success("Você agora está participando do sorteio semanal!");
       }
     }
+    const currentDate = new Date().toISOString();
+    const { error: updateError } = await supabase
+    .from('users')
+    .update({
+      lastQuizDate: currentDate,
+    })
+    .eq('id', user.id);
+
+  if (updateError) {
+    console.error("Erro ao atualizar a data do quiz:", updateError);
+  }
   };
-  
-  const resetQuiz = () => {
-    setCurrentQuestionIndex(0);
-    setCorrectAnswers(0);
-    setQuizCompleted(false);
-    
-    // In a real app, you might fetch new questions here
-  };
-  
+
   const currentQuestion = sampleQuestions[currentQuestionIndex];
-  
+
   return (
     <div className="min-h-screen pt-24 pb-16 bg-gradient-to-b from-furia-black to-furia-purple-dark/70">
       <div className="container mx-auto px-4">
@@ -109,8 +173,61 @@ const Quiz = () => {
               Teste seus conhecimentos e ganhe pontos para trocar por prêmios!
             </p>
           </div>
-          
-          {!quizCompleted ? (
+
+          {/* Tela de Erro */}
+          {quizFailed ? (
+            <div className="bg-furia-black/60 backdrop-blur-md rounded-xl p-6 border border-furia-purple/20 text-center animate-fade-in">
+              <h2 className="text-2xl font-orbitron font-bold text-white mb-4">
+                Você errou! 😢
+              </h2>
+              <p className="text-white/70 mb-6">
+                Não foi dessa vez. Tente novamente para ganhar pontos.
+              </p>
+              <div className="flex justify-center items-center gap-4">
+                <button onClick={() => navigate('/dashboard')} className="btn-secondary">
+                  Voltar ao Dashboard
+                </button>
+              </div>
+            </div>
+          ) :
+
+          // Tela de Conclusão
+          quizCompleted ? (
+            <div className="bg-furia-black/60 backdrop-blur-md rounded-xl p-6 border border-furia-purple/20 text-center animate-fade-in">
+              <h2 className="text-2xl font-orbitron font-bold text-white mb-4">
+                Quiz Concluído!
+              </h2>
+
+              <div className="mb-8">
+                <div className="text-5xl font-bold text-gradient mb-2">
+                  {correctAnswers}/{sampleQuestions.length}
+                </div>
+                <p className="text-white/70">Perguntas respondidas corretamente</p>
+
+                <div className="mt-6 p-4 bg-furia-purple/10 rounded-lg border border-furia-purple/20">
+                  <p className="text-lg text-white mb-1">Você ganhou {(correctAnswers) * 25} pontos!</p>
+                  {(correctAnswers) >= 3 && (
+                    <p className="text-furia-orange">
+                      Parabéns! Você está participando do sorteio semanal!
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-center items-center gap-4">
+                <button onClick={async () => {
+                  await completeQuiz();
+                  navigate('/dashboard'); 
+                }}
+>
+                  Voltar ao Dashboard
+                </button>
+              </div>
+            </div>
+          ) :
+
+          // Perguntas normais
+          (
             <div>
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-2">
@@ -124,44 +241,16 @@ const Quiz = () => {
                 <div className="w-full h-2 bg-furia-black/60 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-furia-purple transition-all" 
-                    style={{ width: `${((currentQuestionIndex + 1) / sampleQuestions.length) * 100}%` }}
+                    style={{ width: `${((currentQuestionIndex) / sampleQuestions.length) * 100}%` }}
                   ></div>
                 </div>
               </div>
-              
+
               <QuizQuestion
                 {...currentQuestion}
                 onAnswer={handleAnswer}
+                key={currentQuestion.id} 
               />
-            </div>
-          ) : (
-            <div className="bg-furia-black/60 backdrop-blur-md rounded-xl p-6 border border-furia-purple/20 text-center animate-fade-in">
-              <h2 className="text-2xl font-orbitron font-bold text-white mb-4">
-                Quiz Concluído!
-              </h2>
-              
-              <div className="mb-8">
-                <div className="text-5xl font-bold text-gradient mb-2">{correctAnswers}/{sampleQuestions.length}</div>
-                <p className="text-white/70">Perguntas respondidas corretamente</p>
-                
-                <div className="mt-6 p-4 bg-furia-purple/10 rounded-lg border border-furia-purple/20">
-                  <p className="text-lg text-white mb-1">Você ganhou {correctAnswers * 25} pontos!</p>
-                  {correctAnswers >= 3 && (
-                    <p className="text-furia-orange">
-                      Parabéns! Você está participando do sorteio semanal!
-                    </p>
-                  )}
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button onClick={resetQuiz} className="btn-primary">
-                  Tentar Novamente
-                </button>
-                <button onClick={() => navigate('/dashboard')} className="btn-secondary">
-                  Voltar ao Dashboard
-                </button>
-              </div>
             </div>
           )}
         </div>

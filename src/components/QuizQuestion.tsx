@@ -1,5 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { toast } from "sonner";
 
 export interface Option {
   id: string;
@@ -18,7 +21,30 @@ const QuizQuestion = ({ text, options, onAnswer }: QuestionProps) => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+  const { user, isLoggedIn, updatePoints, setInSweepstakes } = useAuth();
+  const navigate = useNavigate();
   
+  
+  const canTakeQuiz = () => {
+    if (user?.lastQuizDate) {
+      const lastQuizDate = new Date(user.lastQuizDate);
+      const today = new Date();
+      
+      if (lastQuizDate.toDateString() === today.toDateString()) {
+        return false; 
+      }
+    }
+    return true; 
+  };
+  
+
+  useEffect(() => {
+    if (!canTakeQuiz()) {
+      toast.error("Você já fez o quiz hoje! Tente novamente amanhã.");
+      navigate('/dashboard'); 
+    }
+  }, [user, navigate]);
+
   const handleOptionSelect = (optionId: string) => {
     if (hasAnswered) return;
     

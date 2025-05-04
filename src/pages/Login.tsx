@@ -15,7 +15,7 @@ const Login = () => {
   const [registerName, setRegisterName] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
-  const [favoriteMode, setFavoriteMode] = useState<'Jogos' | 'Futebol'>('Jogos');
+  const [favoriteMode, setFavoriteMode] = useState<'League of Legends' | 'Counter-Strike' | 'Valorant' | 'Fortnite' | 'Kings League'>('League of Legends');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isLoginLoading, setIsLoginLoading] = useState(false);
   const [isRegisterLoading, setIsRegisterLoading] = useState(false);
@@ -249,25 +249,56 @@ const Login = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() => setFavoriteMode('Jogos')}
+                    onClick={() => setFavoriteMode('League of Legends')}
                     className={`py-2 rounded-md border text-center transition-colors
-                              ${favoriteMode === 'Jogos' 
+                              ${favoriteMode === 'League of Legends' 
                                 ? 'bg-furia-purple/20 border-furia-purple text-white' 
                                 : 'border-furia-purple/30 text-white/70 hover:bg-furia-purple/10'}`}
                     disabled={isRegisterLoading}
                   >
-                    Jogos
+                    League of Legends
                   </button>
                   <button
                     type="button"
-                    onClick={() => setFavoriteMode('Futebol')}
+                    onClick={() => setFavoriteMode('Counter-Strike')}
                     className={`py-2 rounded-md border text-center transition-colors
-                              ${favoriteMode === 'Futebol' 
+                              ${favoriteMode === 'Counter-Strike' 
                                 ? 'bg-furia-purple/20 border-furia-purple text-white' 
                                 : 'border-furia-purple/30 text-white/70 hover:bg-furia-purple/10'}`}
                     disabled={isRegisterLoading}
                   >
-                    Futebol
+                    Counter Strike
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFavoriteMode('Valorant')}
+                    className={`py-2 rounded-md border text-center transition-colors
+                              ${favoriteMode === 'Valorant' 
+                                ? 'bg-furia-purple/20 border-furia-purple text-white' 
+                                : 'border-furia-purple/30 text-white/70 hover:bg-furia-purple/10'}`}
+                    disabled={isRegisterLoading}
+                  >
+                   Valorant
+                  </button><button
+                    type="button"
+                    onClick={() => setFavoriteMode('Fortnite')}
+                    className={`py-2 rounded-md border text-center transition-colors
+                              ${favoriteMode === 'Fortnite'
+                                ? 'bg-furia-purple/20 border-furia-purple text-white' 
+                                : 'border-furia-purple/30 text-white/70 hover:bg-furia-purple/10'}`}
+                    disabled={isRegisterLoading}
+                  >
+                    Fortnite
+                  </button><button
+                    type="button"
+                    onClick={() => setFavoriteMode('Kings League')}
+                    className={`py-2 rounded-md border text-center transition-colors
+                              ${favoriteMode === 'Kings League'
+                                ? 'bg-furia-purple/20 border-furia-purple text-white' 
+                                : 'border-furia-purple/30 text-white/70 hover:bg-furia-purple/10'}`}
+                    disabled={isRegisterLoading}
+                  >
+                    Kings League
                   </button>
                 </div>
               </div>

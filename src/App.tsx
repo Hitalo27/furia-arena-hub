@@ -17,6 +17,7 @@ import Cards from "./pages/Cards";
 import Prizes from "./pages/Prizes";
 import Ranking from "./pages/Ranking";
 import NotFound from "./pages/NotFound";
+import LiveGames from "./pages/Lives";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/cards" element={<Cards />} />
               <Route path="/prizes" element={<Prizes />} />
               <Route path="/ranking" element={<Ranking />} />
+              <Route path="/lives" element={<LiveGames />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>

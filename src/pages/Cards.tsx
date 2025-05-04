@@ -1,254 +1,172 @@
+import React, { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { useAuth } from '../contexts/AuthContext'; 
 
-import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+const supabaseUrl = 'https://uoelpjllkzkfayqptcxz.supabase.co';  // URL do seu projeto Supabase
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvZWxwamxsa3prZmF5cXB0Y3h6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNTc4MjUsImV4cCI6MjA2MTczMzgyNX0.pjRFD_pP1_idKdWxaBCdqLr2TY3ZSm4ohSZm3wt8F2c';  // Chave de API do Supabase
 
-const Login = () => {
-  const [loginCpf, setLoginCpf] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [registerName, setRegisterName] = useState('');
-  const [registerCpf, setRegisterCpf] = useState('');
-  const [registerPassword, setRegisterPassword] = useState('');
-  const [favoriteMode, setFavoriteMode] = useState<'Jogos' | 'Futebol'>('Jogos');
-  const [termsAccepted, setTermsAccepted] = useState(false);
+export const supabase = createClient(supabaseUrl, supabaseKey);
+
+
+type Card = {
+  id: number;
+  nome_jogador: string;
+  descricao: string;
+  imagem_url: string;
+  raridade: 'comum' | 'raro' | 'lendário';
+};
+
+const PackOpening = ({ userId }: { userId: number }) => {
+  const [currentCard, setCurrentCard] = useState<Card | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const { user } = useAuth(); 
+  const [myCards, setMyCards] = useState<Card[]>([]);
+  const [loadingCards, setLoadingCards] = useState(true);
   
-  const { login, register } = useAuth();
-  const navigate = useNavigate();
-  
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (loginCpf.trim() === '') {
-      toast.error('Por favor, informe seu CPF');
+  const fetchMyCards = async () => {
+    if (!user) return;
+
+    const { data: userCards, error: userCardsError } = await supabase
+      .from('user_cards')
+      .select('id, user_id, card_id, adquirido_em')
+      .eq('user_id', user.id);
+
+    if (userCardsError) {
+      console.error('Erro ao buscar user_cards:', userCardsError.message);
+      setLoadingCards(false);
       return;
     }
-    
-    if (loginPassword.trim() === '') {
-      toast.error('Por favor, informe sua senha');
+
+    const cardIds = userCards.map((uc: any) => uc.card_id);
+
+    if (cardIds.length === 0) {
+      setMyCards([]);
+      setLoadingCards(false);
       return;
     }
-    
-    const success = login(loginCpf, loginPassword);
-    
-    if (success) {
-      toast.success('Login realizado com sucesso!');
-      navigate('/dashboard');
-    } else {
-      toast.error('CPF ou senha incorretos. Por favor, verifique ou cadastre-se.');
-    }
-  };
-  
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (registerName.trim() === '') {
-      toast.error('Por favor, informe seu nome');
+
+    const { data: cardsData, error: cardsError } = await supabase
+      .from('cards')
+      .select('id, nome_jogador, descricao, imagem_url, raridade')
+      .in('id', cardIds);
+
+    if (cardsError) {
+      console.error('Erro ao buscar cards:', cardsError.message);
+      setLoadingCards(false);
       return;
     }
-    
-    if (registerCpf.trim() === '') {
-      toast.error('Por favor, informe seu CPF');
-      return;
-    }
-    
-    if (registerPassword.trim() === '') {
-      toast.error('Por favor, defina uma senha');
-      return;
-    }
-    
-    if (!termsAccepted) {
-      toast.error('Você precisa aceitar os termos de uso');
-      return;
-    }
-    
-    const success = register(registerName, registerCpf, registerPassword, favoriteMode);
-    
-    if (success) {
-      toast.success('Cadastro realizado com sucesso!');
-      navigate('/dashboard');
-    } else {
-      toast.error('Erro ao cadastrar. Tente novamente.');
-    }
+
+    setMyCards(cardsData || []);
+    setLoadingCards(false);
   };
 
+  useEffect(() => {
+    if (user) {
+      fetchMyCards();
+    }
+  }, [user]);
+
+  const sortearCard = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cards') 
+        .select('id, nome_jogador, descricao, imagem_url, raridade')
+
+      if (error) {
+        console.error('Erro ao buscar card aleatório:', error.message);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const sorteado = data[Math.floor(Math.random() * data.length)]; 
+        setCurrentCard(sorteado);
+
+        setIsSaving(true);
+        const { error: insertError } = await supabase
+                    .from('user_cards')
+                    .insert([{
+                      user_id: user.id,
+                      card_id: sorteado.id,
+                      adquirido_em: new Date().toISOString(),
+                    }]);
+
+                    if (insertError) {
+                      console.error('Erro ao salvar card:', insertError.message);
+                    }
+        setIsSaving(false);
+      }
+    } catch (error) {
+      console.error('Erro ao sortear o card:', error);
+      setIsSaving(false);
+    }
+  };
   return (
-    <div className="min-h-screen pt-20 pb-16 flex items-center justify-center bg-gradient-to-b from-furia-black to-furia-purple-dark/70">
-      <div className="w-full max-w-md p-6 bg-furia-black/60 backdrop-blur-md rounded-xl shadow-xl border border-furia-purple/20">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-orbitron font-bold text-gradient">FURIA Fans</h1>
-          <p className="text-white/70 mt-2">Entre para começar a sua jornada</p>
+    <div className="flex flex-col items-center">
+      <h2 className="text-2xl font-bold text-white mb-4">Abra seu pacote!</h2>
+      <button
+        onClick={sortearCard}
+        disabled={isSaving}
+        className="btn-primary mb-6"
+      >
+        {isSaving ? 'Salvando...' : 'Sortear Card'}
+      </button>
+
+      {currentCard && (
+        <div className="bg-furia-black/70 border border-furia-purple/30 p-4 rounded-xl shadow-lg text-center mb-8">
+          <img
+            src={currentCard.imagem_url}
+            alt={currentCard.nome_jogador}
+            className="w-48 h-48 object-cover mx-auto rounded-lg mb-4"
+          />
+          <h3 className="text-xl text-white">{currentCard.nome_jogador}</h3>
+          <p className="text-gray-400">{currentCard.descricao}</p>
+          <p
+            className={`mt-2 ${
+              currentCard.raridade === 'lendário'
+                ? 'text-yellow-400'
+                : currentCard.raridade === 'raro'
+                ? 'text-purple-400'
+                : 'text-gray-300'
+            }`}
+          >
+            {currentCard.raridade.toUpperCase()}
+          </p>
         </div>
-        
-        <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid grid-cols-2 mb-6">
-            <TabsTrigger id="login-tab" value="login">Login</TabsTrigger>
-            <TabsTrigger id="register-tab" value="register">Cadastro</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="login">
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <Label htmlFor="cpf" className="text-white mb-1">
-                  CPF
-                </Label>
-                <Input
-                  type="text"
-                  id="cpf"
-                  value={loginCpf}
-                  onChange={(e) => setLoginCpf(e.target.value)}
-                  className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
-                  placeholder="Digite seu CPF"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="password" className="text-white mb-1">
-                  Senha
-                </Label>
-                <Input
-                  type="password"
-                  id="password"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
-                  placeholder="Digite sua senha"
-                />
-              </div>
-              
-              <Button
-                type="submit"
-                className="w-full btn-primary"
+      )}
+
+      <h2 className="text-2xl font-bold text-white mb-4">Seus Cards</h2>
+      {loadingCards ? (
+        <div className="text-white">Carregando seus cards...</div>
+      ) : myCards.length === 0 ? (
+        <p className="text-white">Você ainda não possui cards.</p>
+      ) : (
+        <div className="flex flex-wrap justify-center gap-6">
+          {myCards.map((card) => (
+            <div key={card.id} className="bg-furia-black/70 border border-furia-purple/30 p-4 rounded-xl shadow-lg text-center w-60">
+              <img
+                src={card.imagem_url}
+                alt={card.nome_jogador}
+                className="w-48 h-48 object-cover mx-auto rounded-lg mb-4"
+              />
+              <h3 className="text-xl text-white">{card.nome_jogador}</h3>
+              <p className="text-gray-400">{card.descricao}</p>
+              <p
+                className={`mt-2 ${
+                  card.raridade === 'lendário'
+                    ? 'text-yellow-400'
+                    : card.raridade === 'raro'
+                    ? 'text-purple-400'
+                    : 'text-gray-300'
+                }`}
               >
-                Entrar
-              </Button>
-              
-              <p className="text-sm text-center text-white/70 mt-4">
-                Não tem uma conta?{' '}
-                <button
-                  type="button" 
-                  onClick={() => document.getElementById('register-tab')?.click()}
-                  className="text-furia-purple hover:underline focus:outline-none"
-                >
-                  Cadastre-se
-                </button>
+                {card.raridade.toUpperCase()}
               </p>
-            </form>
-          </TabsContent>
-          
-          <TabsContent value="register">
-            <form onSubmit={handleRegister} className="space-y-4">
-              <div>
-                <Label htmlFor="name" className="text-white mb-1">
-                  Nome
-                </Label>
-                <Input
-                  type="text"
-                  id="name"
-                  value={registerName}
-                  onChange={(e) => setRegisterName(e.target.value)}
-                  className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
-                  placeholder="Digite seu nome"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="register-cpf" className="text-white mb-1">
-                  CPF
-                </Label>
-                <Input
-                  type="text"
-                  id="register-cpf"
-                  value={registerCpf}
-                  onChange={(e) => setRegisterCpf(e.target.value)}
-                  className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
-                  placeholder="Digite seu CPF"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="register-password" className="text-white mb-1">
-                  Senha
-                </Label>
-                <Input
-                  type="password"
-                  id="register-password"
-                  value={registerPassword}
-                  onChange={(e) => setRegisterPassword(e.target.value)}
-                  className="bg-furia-black border border-furia-purple/30 focus:ring-furia-purple text-white"
-                  placeholder="Defina uma senha"
-                />
-              </div>
-              
-              <div>
-                <Label className="text-white mb-2">
-                  Modalidade Favorita
-                </Label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setFavoriteMode('Jogos')}
-                    className={`py-2 rounded-md border text-center transition-colors
-                              ${favoriteMode === 'Jogos' 
-                                ? 'bg-furia-purple/20 border-furia-purple text-white' 
-                                : 'border-furia-purple/30 text-white/70 hover:bg-furia-purple/10'}`}
-                  >
-                    Jogos
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFavoriteMode('Futebol')}
-                    className={`py-2 rounded-md border text-center transition-colors
-                              ${favoriteMode === 'Futebol' 
-                                ? 'bg-furia-purple/20 border-furia-purple text-white' 
-                                : 'border-furia-purple/30 text-white/70 hover:bg-furia-purple/10'}`}
-                  >
-                    Futebol
-                  </button>
-                </div>
-              </div>
-              
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="terms"
-                  checked={termsAccepted}
-                  onChange={(e) => setTermsAccepted(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-furia-purple focus:ring-furia-purple"
-                />
-                <label htmlFor="terms" className="ml-2 block text-sm text-white/70">
-                  Aceito os <Link to="/terms" className="text-furia-purple hover:underline">termos de uso</Link> e a <Link to="/privacy" className="text-furia-purple hover:underline">política de privacidade</Link>
-                </label>
-              </div>
-              
-              <Button
-                type="submit"
-                className="w-full btn-primary"
-                disabled={!termsAccepted}
-              >
-                Cadastrar
-              </Button>
-              
-              <p className="text-sm text-center text-white/70 mt-4">
-                Já tem uma conta?{' '}
-                <button
-                  type="button"
-                  onClick={() => document.getElementById('login-tab')?.click()}
-                  className="text-furia-purple hover:underline focus:outline-none"
-                >
-                  Faça login
-                </button>
-              </p>
-            </form>
-          </TabsContent>
-        </Tabs>
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
 
-export default Login;
+export default PackOpening;

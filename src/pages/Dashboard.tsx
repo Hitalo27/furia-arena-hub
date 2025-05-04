@@ -100,6 +100,17 @@ const Dashboard = () => {
               </div>
             </Link>
             
+            <Link to="/lives" className="bg-furia-black/60 backdrop-blur-md rounded-xl p-6 border border-furia-purple/20
+                                      hover:border-furia-purple transition-all group animation-delay-200 animate-fade-in">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-xl font-orbitron font-bold text-white mb-2">Lives</h2>
+                  <p className="text-sm text-white/70">Veja ao vivo os jogos da Fúria</p>
+                </div>
+                <Gift className="text-furia-purple group-hover:text-furia-orange transition-colors" size={28} />
+              </div>
+            </Link>
+
           </div>
           
           {/* Activity Feed */}

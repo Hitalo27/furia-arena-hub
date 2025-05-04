@@ -8,23 +8,16 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
-console.log(supabase);
-
 export const login = async (email: string, password: string): Promise<User | null> => {
   
   try {
-    // First check if the user exists in our users table
-    console.log("passou aq")
-    await supabase.auth.signOut(); // limpar a sessão quebrada
+    await supabase.auth.signOut();
     await supabase.auth.getSession(); 
     const { data: userData, error: userCheckError } = await supabase
     .from('users')
     .select('*')
     .eq('email', email)
     .maybeSingle();
-  
-
-      console.log(userData);
 
       if (userCheckError) {
         toast.error(`Erro ao buscar o usuário: ${userCheckError.message}`);
@@ -36,14 +29,10 @@ export const login = async (email: string, password: string): Promise<User | nul
         return null;
       }
     
-    // Authenticate with Supabase Auth
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-
-    console.log("data:");
-    console.log(data);
     
     if (error) {
       toast.error('Senha incorreta. Por favor, tente novamente.');
@@ -52,15 +41,15 @@ export const login = async (email: string, password: string): Promise<User | nul
     }
     
     const userObject: User = {
+      id: userData.id,
       name: userData.nome, 
       email: userData.email,
-      favoriteMode: userData.modalidade as 'Jogos' | 'Futebol',
+      favoriteMode: userData.modalidade as 'League of Legends' | 'Counter-Strike' | 'Valorant' | 'Fortnite' | 'Kings League',
       points: userData.pontos || 0,
       level: getLevelFromPoints(userData.pontos || 0),
       inSweepstakes: false,
+      lastQuizDate: userData.lastQuizDate,
     };
-    console.log("userobject:");
-    console.log(userObject);
 
     return userObject;
   } catch (error) {
@@ -70,10 +59,9 @@ export const login = async (email: string, password: string): Promise<User | nul
   }
 };
 
-export const register = async (name: string, email: string, password: string, favoriteMode: 'Jogos' | 'Futebol'): Promise<User | null> => {
+export const register = async (name: string, email: string, password: string, favoriteMode: 'League of Legends' | 'Counter-Strike' | 'Valorant' | 'Fortnite' | 'Kings League'): Promise<User | null> => {
   try {
-    console.log("buscando usuario");
-    await supabase.auth.signOut(); // limpar a sessão quebrada
+    await supabase.auth.signOut(); 
     await supabase.auth.getSession(); 
     const { data: existingUser} = await supabase
       .from('users')
@@ -85,9 +73,6 @@ export const register = async (name: string, email: string, password: string, fa
       toast.error('Este email já está cadastrado.');
       return null;
     }
-    console.log('Usuário não encontrado. Cadastro permitido.');
-
-    console.log("Passou aq")
 
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -133,7 +118,9 @@ export const register = async (name: string, email: string, password: string, fa
       favoriteMode,
       points: 0,
       level: 'FURIOSO Iniciante',
-      inSweepstakes: false
+      inSweepstakes: false,
+      id: authData.user.id,
+      lastQuizDate: null
     };
     
     // Auto-login após o cadastro
