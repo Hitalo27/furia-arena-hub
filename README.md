@@ -1,5 +1,4 @@
-# 🔥 Sistema de Batalhas e Sorteios
-
+# 🔥 Furia Fans
 Sistema para gerenciamento de batalhas entre usuários, cards colecionáveis, ranking e sorteio de prêmios.
 
 Front-end desenvolvido no Lovable.dev, back-end utilizando Supabase.
